@@ -76,16 +76,21 @@ export default function GameScreen() {
     }
   }, [phase]);
 
+  // Play goal sound when collision event fires (during slow-mo, before phase changes)
+  useEffect(() => {
+    if (lastCollisionEvent === 'goal' && Platform.OS === 'web') {
+      stopFlyingSound();
+      playGoalSound();
+    }
+  }, [lastCollisionEvent]);
+
   useEffect(() => {
     if (phase === 'goal' && stage) {
-      if (Platform.OS === 'web') {
-        stopFlyingSound();
-        playGoalSound();
-      }
+      // Phase transitions to 'goal' after slow-motion finishes
       const stars = calculateStars(fuel, stage.starThresholds);
       const timeout = setTimeout(() => {
         router.replace(`/result/${sId}?stars=${stars}&fuel=${fuel}`);
-      }, 800);
+      }, 300); // shorter delay since slow-mo already played
       return () => clearTimeout(timeout);
     }
     if (phase === 'crashed') {

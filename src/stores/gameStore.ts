@@ -71,6 +71,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   failCount: 0,
   lastCollisionEvent: 'none',
   proximity: { ...defaultProximity },
+  timeScale: 1,
+  goalSlowMoTimer: 0,
 
   setStage: (stage) => {
     set({
@@ -90,6 +92,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       failCount: 0,
       lastCollisionEvent: 'none',
       proximity: { ...defaultProximity },
+      timeScale: 1,
+      goalSlowMoTimer: 0,
     });
   },
 
@@ -112,6 +116,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       failCount: state.phase === 'crashed' || state.phase === 'absorbed' ? state.failCount + 1 : state.failCount,
       lastCollisionEvent: 'none',
       proximity: { ...defaultProximity },
+      timeScale: 1,
+      goalSlowMoTimer: 0,
     }));
   },
 
@@ -172,7 +178,32 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   tick: () => {
     const state = get();
-    if (state.phase !== 'flying' || state.isPaused || !state.currentStage) return;
+    if (state.isPaused || !state.currentStage) return;
+
+    // Goal slow-motion countdown: keep ticking with reduced timeScale until timer expires
+    if (state.goalSlowMoTimer > 0) {
+      const remaining = state.goalSlowMoTimer - 1;
+      if (remaining <= 0) {
+        // Slow-motion finished, transition to goal phase
+        set({ phase: 'goal', timeScale: 1, goalSlowMoTimer: 0 });
+        return;
+      }
+      // Ease timeScale back toward 1.0 in the last 15 frames
+      const newTimeScale = remaining < 15 ? 0.3 + 0.7 * (1 - remaining / 15) : 0.3;
+      // Continue physics at slow speed
+      const dt = PHYSICS.TIME_STEP * newTimeScale;
+      const newRocket = updatePhysics(state.rocket, state.currentStage, dt, state.frameCount + 1);
+      set({
+        rocket: newRocket,
+        frameCount: state.frameCount + 1,
+        elapsedMs: state.elapsedMs + dt * 1000,
+        timeScale: newTimeScale,
+        goalSlowMoTimer: remaining,
+      });
+      return;
+    }
+
+    if (state.phase !== 'flying') return;
 
     const dt = PHYSICS.TIME_STEP;
     const newFrameCount = state.frameCount + 1;
@@ -186,6 +217,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Check collisions
     const collision = checkCollisions(newRocket, state.currentStage, state.usedBoosters, newCooldown);
 
+    // Compute proximity to planets and black holes (before switch so goal case can use them)
+    let closestPlanetDist = 999;
+    for (const planet of state.currentStage.planets) {
+      const d = distance(newRocket.position, npToV2(planet.position));
+      if (d < closestPlanetDist) closestPlanetDist = d;
+    }
+    let closestBlackHoleDist = 999;
+    for (const obj of state.currentStage.specialObjects) {
+      if (obj.type === 'blackhole') {
+        const d = distance(newRocket.position, npToV2(obj.data.position));
+        if (d < closestBlackHoleDist) closestBlackHoleDist = d;
+      }
+    }
+
     let newPhase: GamePhase = 'flying';
     const newUsedBoosters = new Set(state.usedBoosters);
     let wormholeCd = newCooldown;
@@ -193,9 +238,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
     switch (collision.type) {
       case 'goal':
-        newPhase = 'goal';
+        // Start slow-motion instead of immediate goal phase
         collisionEvent = 'goal';
-        break;
+        set({
+          rocket: newRocket,
+          frameCount: newFrameCount,
+          elapsedMs: state.elapsedMs + dt * 1000,
+          usedBoosters: newUsedBoosters,
+          wormholeCooldown: wormholeCd,
+          lastCollisionEvent: 'goal',
+          timeScale: 0.3,
+          goalSlowMoTimer: 45, // ~0.75s real time at 60fps
+          proximity: { closestPlanetDist, closestBlackHoleDist },
+        });
+        return; // Skip the normal set() at the bottom
       case 'planet':
         newPhase = 'crashed';
         collisionEvent = 'crashed';
@@ -234,20 +290,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
         newUsedBoosters.add(b.id);
         collisionEvent = 'booster';
         break;
-      }
-    }
-
-    // Compute proximity to planets and black holes
-    let closestPlanetDist = 999;
-    for (const planet of state.currentStage.planets) {
-      const d = distance(newRocket.position, npToV2(planet.position));
-      if (d < closestPlanetDist) closestPlanetDist = d;
-    }
-    let closestBlackHoleDist = 999;
-    for (const obj of state.currentStage.specialObjects) {
-      if (obj.type === 'blackhole') {
-        const d = distance(newRocket.position, npToV2(obj.data.position));
-        if (d < closestBlackHoleDist) closestBlackHoleDist = d;
       }
     }
 
