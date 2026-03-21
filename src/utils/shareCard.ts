@@ -10,10 +10,12 @@ export interface ShareCardOptions {
   stars: 1 | 2 | 3;
   worldId: number;
   stageInWorld: number;
+  perfectCount?: number;
+  totalCleared?: number;
 }
 
 export async function generateShareCard(options: ShareCardOptions): Promise<Blob | null> {
-  const { trail, stage, stars, worldId, stageInWorld } = options;
+  const { trail, stage, stars, worldId, stageInWorld, perfectCount, totalCleared } = options;
   const W = 1200;
   const H = 630;
 
@@ -155,6 +157,16 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   ctx.fillStyle = '#FFD700';
   ctx.font = 'bold 48px sans-serif';
   ctx.fillText(starStr, 40, 110);
+
+  // Perfect clear rate badge (top-right)
+  if (perfectCount !== undefined && totalCleared !== undefined && totalCleared > 0) {
+    ctx.fillStyle = 'rgba(255,215,0,0.15)';
+    ctx.fillRect(W - 280, 20, 240, 50);
+    ctx.fillStyle = '#FFD700';
+    ctx.font = 'bold 22px sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(`\u2B50${perfectCount}/${totalCleared} Perfect`, W - 30, 55);
+  }
 
   // Hashtag
   ctx.fillStyle = 'rgba(255,255,255,0.6)';

@@ -3,6 +3,8 @@
     "name": "rocket-fling",
     "slug": "rocket-fling",
     "version": "1.0.0",
+    "description": "ぶっ飛びロケット - スリングショットでロケットを打ち上げ！惑星の重力を使って星に到達する物理パズルゲーム。100ステージ以上収録。3スターを目指して挑戦！キーワード: ロケットゲーム 物理パズル スリングショット 宇宙ゲーム パズルゲーム",
+    "keywords": ["ぶっ飛びロケット", "物理パズル", "ロケット", "スリングショット", "宇宙ゲーム"],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
@@ -30,7 +32,8 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-sharing"
     ]
   }
 }

@@ -44,7 +44,9 @@ export default function GameScreen() {
   const proximity = useGameStore(s => s.proximity);
   const incrementLaunches = useProgressStore(s => s.incrementLaunches);
   const clearedStages = useProgressStore(s => s.clearedStages);
+  const spendCoins = useProgressStore(s => s.spendCoins);
   const [launched, setLaunched] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const gravitySoundCooldown = useRef(0);
   const blackHoleSoundCooldown = useRef(0);
@@ -171,8 +173,22 @@ export default function GameScreen() {
     if (Platform.OS === 'web') {
       stopFlyingSound();
     }
+    setShowHint(false);
     reset();
   }, [reset]);
+
+  const handleHintPurchase = useCallback(() => {
+    const coins = useProgressStore.getState().coins;
+    if (coins >= 20) {
+      spendCoins(20);
+      setShowHint(true);
+      setTimeout(() => setShowHint(false), 3000);
+    } else {
+      if (Platform.OS === 'web') {
+        window.alert('\u30B3\u30A4\u30F3\u4E0D\u8DB3\n\u30C7\u30A4\u30EA\u30FC\u3092\u30AF\u30EA\u30A2\u3057\u3066\u30B3\u30A4\u30F3\u3092\u7372\u5F97\u3057\u3088\u3046\uFF01');
+      }
+    }
+  }, [spendCoins]);
 
   const handlePause = useCallback(() => {
     setPaused(!isPaused);
@@ -203,6 +219,22 @@ export default function GameScreen() {
           <TouchableOpacity onPress={handleRetry} style={styles.retryBtn}>
             <Text style={styles.retryText}>🔄 リトライ</Text>
           </TouchableOpacity>
+        )}
+
+        {/* Hint purchase button (shown on crashed/absorbed phase) */}
+        {(phase === 'crashed' || phase === 'absorbed' || phase === 'aiming') && stage && (
+          <TouchableOpacity onPress={handleHintPurchase} style={styles.hintBtn}>
+            <Text style={styles.hintText}>🔍 軌跡ヒントを見る（-20コイン）</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* Hint trail overlay */}
+        {showHint && stage && (
+          <View style={styles.hintOverlay} pointerEvents="none">
+            <Text style={styles.hintOverlayText}>
+              {'\u30D2\u30F3\u30C8: \u30B4\u30FC\u30EB\u65B9\u5411\u3078\u5F37\u3081\u306B\u6253\u3061\u4E0A\u3052\u3066\u307F\u3088\u3046\uFF01'}
+            </Text>
+          </View>
         )}
 
         {/* Tutorial overlay */}
@@ -257,6 +289,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
   },
   retryText: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
+  hintBtn: {
+    position: 'absolute', bottom: 90, right: 20,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20,
+    borderWidth: 1, borderColor: 'rgba(255,215,0,0.5)',
+  },
+  hintText: { color: '#FFD700', fontSize: 12, fontWeight: '600' },
+  hintOverlay: {
+    position: 'absolute', top: '45%', left: 0, right: 0,
+    alignItems: 'center',
+  },
+  hintOverlayText: {
+    backgroundColor: 'rgba(255,0,0,0.7)',
+    color: '#FFFFFF', fontSize: 14, fontWeight: '700',
+    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12,
+  },
   pauseOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.8)',

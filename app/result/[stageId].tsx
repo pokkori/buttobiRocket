@@ -13,7 +13,7 @@ import { generateShareCard } from '../../src/utils/shareCard';
 
 export default function ResultScreen() {
   const router = useRouter();
-  const { stageId, stars: starsParam, fuel: fuelParam } = useLocalSearchParams<{ stageId: string; stars: string; fuel: string }>();
+  const { stageId, stars: starsParam, fuel: fuelParam, dailyMode } = useLocalSearchParams<{ stageId: string; stars: string; fuel: string; dailyMode?: string }>();
   const sId = parseInt(stageId ?? '1', 10);
   const stars = parseInt(starsParam ?? '1', 10) as 1 | 2 | 3;
   const fuel = parseFloat(fuelParam ?? '0');
@@ -26,6 +26,10 @@ export default function ResultScreen() {
   // Check if this is a new record (better stars than previous)
   const prevResult = clearedStages[sId];
   const isNewRecord = !prevResult || stars > (prevResult.stars || 0);
+
+  const isDaily = dailyMode === 'true';
+  const totalCleared = Object.keys(clearedStages).length;
+  const perfectCount = Object.values(clearedStages).filter(s => s.stars >= 3).length;
 
   // Star animations
   const starAnims = [
@@ -118,13 +122,20 @@ export default function ResultScreen() {
   const finalTrail = useGameStore(s => s.finalTrail);
 
   const handleShare = async () => {
-    const text = [
-      `${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
-      `Stage ${world.id}-${stageInWorld}\u300C${stage.name}\u300D`,
-      `${starEmojis} \u30AF\u30EA\u30A2\uFF01`,
-      `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
-      `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u7269\u7406\u30D1\u30BA\u30EB`,
-    ].join('\n');
+    const text = isDaily
+      ? [
+          `${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 \u30C7\u30A4\u30EA\u30FC\u6311\u6226\uFF01`,
+          `${starEmojis}\u30AF\u30EA\u30A2\uFF01`,
+          `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
+          `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8\u30C7\u30A4\u30EA\u30FC`,
+        ].join('\n')
+      : [
+          `${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
+          `Stage ${world.id}-${stageInWorld}\u300C${stage.name}\u300D`,
+          `${starEmojis} \u30AF\u30EA\u30A2\uFF01`,
+          `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
+          `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u7269\u7406\u30D1\u30BA\u30EB`,
+        ].join('\n');
 
     try {
       if (Platform.OS === 'web') {
@@ -137,6 +148,8 @@ export default function ResultScreen() {
             stars,
             worldId: world.id,
             stageInWorld,
+            perfectCount,
+            totalCleared,
           });
         }
 
