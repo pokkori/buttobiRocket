@@ -29,7 +29,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png",
-      "bundler": "metro"
+      "bundler": "metro",
+      "title": "ぶっ飛びロケット - 重力パズルで星3クリアを目指せ！",
+      "description": "惑星の重力を操り、ロケットをゴールに導く物理パズルゲーム。100ステージ収録。ブラウザで無料プレイ！",
+      "themeColor": "#0A0E27"
     },
     "plugins": [
       "expo-router",

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Animated, Easing, Share, Platform } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Animated, Easing, Share, Platform, Image } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Button } from '../../src/components/ui/Button';
 import { CoinDisplay } from '../../src/components/ui/CoinDisplay';
@@ -22,6 +22,7 @@ export default function ResultScreen() {
   const clearStage = useProgressStore(s => s.clearStage);
   const coins = useProgressStore(s => s.coins);
   const clearedStages = useProgressStore(s => s.clearedStages);
+  const streak = useProgressStore(s => s.dailyChallenge.streak);
 
   // Check if this is a new record (better stars than previous)
   const prevResult = clearedStages[sId];
@@ -30,6 +31,11 @@ export default function ResultScreen() {
   const isDaily = dailyMode === 'true';
   const totalCleared = Object.keys(clearedStages).length;
   const perfectCount = Object.values(clearedStages).filter(s => s.stars >= 3).length;
+
+  const finalTrail = useGameStore(s => s.finalTrail);
+
+  // Trajectory preview state
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Star animations
   const starAnims = [
@@ -98,6 +104,23 @@ export default function ResultScreen() {
       ]).start();
     }
 
+    // Generate trajectory preview image (web only)
+    if (Platform.OS === 'web' && stage && world && finalTrail.length > 1) {
+      generateShareCard({
+        trail: finalTrail,
+        stage,
+        stars,
+        worldId: world.id,
+        stageInWorld: stage.id - world.stageIds[0] + 1,
+        perfectCount,
+        totalCleared,
+      }).then(blob => {
+        if (blob) {
+          setPreviewUrl(URL.createObjectURL(blob));
+        }
+      });
+    }
+
     return () => {
       fuelCountAnim.removeAllListeners();
     };
@@ -119,21 +142,23 @@ export default function ResultScreen() {
 
   const starEmojis = Array(stars).fill(STAR_EMOJI).join('');
 
-  const finalTrail = useGameStore(s => s.finalTrail);
-
   const handleShare = async () => {
+    const streakPrefix = streak >= 3 ? `\uD83D\uDD25${streak}\u65E5\u9023\u7D9A! ` : '';
+    const badgeSuffix = `\n\u2B50${perfectCount}Perfect | \u8A08${totalCleared}\u30AF\u30EA\u30A2`;
     const text = isDaily
       ? [
-          `${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 \u30C7\u30A4\u30EA\u30FC\u6311\u6226\uFF01`,
+          `${streakPrefix}${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 \u30C7\u30A4\u30EA\u30FC\u6311\u6226\uFF01`,
           `${starEmojis}\u30AF\u30EA\u30A2\uFF01`,
           `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
+          badgeSuffix,
           `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8\u30C7\u30A4\u30EA\u30FC`,
         ].join('\n')
       : [
-          `${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
+          `${streakPrefix}${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
           `Stage ${world.id}-${stageInWorld}\u300C${stage.name}\u300D`,
           `${starEmojis} \u30AF\u30EA\u30A2\uFF01`,
           `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
+          badgeSuffix,
           `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u7269\u7406\u30D1\u30BA\u30EB`,
         ].join('\n');
 
@@ -197,6 +222,13 @@ export default function ResultScreen() {
         <CoinDisplay amount={coins} />
       </View>
 
+      {/* Daily streak banner */}
+      {isDaily && streak >= 2 && (
+        <View style={styles.streakBanner}>
+          <Text style={styles.streakText}>{`\uD83D\uDD25 ${streak}\u65E5\u9023\u7D9A\u30AF\u30EA\u30A2\uFF01`}</Text>
+        </View>
+      )}
+
       <View style={styles.center}>
         <Animated.Text style={[styles.clearText, stars === 1 && { transform: [{ scale: clearTextScale }] }]}>
           {clearLabel}
@@ -244,7 +276,19 @@ export default function ResultScreen() {
         <View style={styles.stats}>
           <Text style={styles.statText}>{'\u6B8B\u308A\u71C3\u6599: ' + displayFuel + '%'}</Text>
           <Text style={styles.statText}>{'\u7372\u5F97\u30B3\u30A4\u30F3: +' + coinReward}</Text>
+          <Text style={styles.statText}>{'\u30AF\u30EA\u30A2\u6E08: ' + totalCleared + '\u30B9\u30C6\u30FC\u30B8 / \u2B50\uFF13: ' + perfectCount + '\u30B9\u30C6\u30FC\u30B8'}</Text>
         </View>
+
+        {/* Trajectory preview thumbnail (web only) */}
+        {Platform.OS === 'web' && previewUrl && (
+          <View style={styles.previewContainer}>
+            <Image
+              source={{ uri: previewUrl }}
+              style={styles.previewImage}
+              resizeMode="cover"
+            />
+          </View>
+        )}
       </View>
 
       <View style={styles.buttons}>
@@ -289,6 +333,35 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0A0E27' },
   header: {
     flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 16, paddingVertical: 8,
+  },
+  streakBanner: {
+    backgroundColor: 'rgba(255,140,0,0.2)',
+    borderWidth: 1.5,
+    borderColor: '#FF8C00',
+    borderRadius: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    marginHorizontal: 32,
+    marginTop: 8,
+    alignItems: 'center',
+  },
+  streakText: {
+    color: '#FF8C00',
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  previewContainer: {
+    marginTop: 16,
+    width: '90%',
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0,191,255,0.3)',
+  },
+  previewImage: {
+    width: '100%',
+    height: 160,
+    borderRadius: 12,
   },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   clearText: { fontSize: 28, fontWeight: '900', color: COLORS.accent, marginBottom: 12 },
