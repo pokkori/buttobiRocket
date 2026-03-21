@@ -12,6 +12,7 @@ export interface ShareCardOptions {
   stageInWorld: number;
   perfectCount?: number;
   totalCleared?: number;
+  streak?: number;
 }
 
 export async function generateShareCard(options: ShareCardOptions): Promise<Blob | null> {
@@ -166,6 +167,22 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
     ctx.font = 'bold 22px sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText(`\u2B50${perfectCount}/${totalCleared} Perfect`, W - 30, 55);
+  }
+
+  // Streak badge
+  if (options.streak && options.streak >= 3) {
+    const badgeX = 40;
+    const badgeY = H - 115;
+    const badgeW = 300;
+    const badgeH = 65;
+    ctx.fillStyle = 'rgba(255,107,53,0.9)';
+    ctx.beginPath();
+    ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 10);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 30px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`\uD83D\uDD25 ${options.streak}\u65E5\u9023\u7D9A\u30AF\u30EA\u30A2!`, badgeX + 15, badgeY + 43);
   }
 
   // Hashtag

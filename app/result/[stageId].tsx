@@ -114,6 +114,7 @@ export default function ResultScreen() {
         stageInWorld: stage.id - world.stageIds[0] + 1,
         perfectCount,
         totalCleared,
+        streak,
       }).then(blob => {
         if (blob) {
           setPreviewUrl(URL.createObjectURL(blob));
@@ -143,24 +144,8 @@ export default function ResultScreen() {
   const starEmojis = Array(stars).fill(STAR_EMOJI).join('');
 
   const handleShare = async () => {
-    const streakPrefix = streak >= 3 ? `\uD83D\uDD25${streak}\u65E5\u9023\u7D9A! ` : '';
-    const badgeSuffix = `\n\u2B50${perfectCount}Perfect | \u8A08${totalCleared}\u30AF\u30EA\u30A2`;
-    const text = isDaily
-      ? [
-          `${streakPrefix}${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 \u30C7\u30A4\u30EA\u30FC\u6311\u6226\uFF01`,
-          `${starEmojis}\u30AF\u30EA\u30A2\uFF01`,
-          `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
-          badgeSuffix,
-          `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8\u30C7\u30A4\u30EA\u30FC`,
-        ].join('\n')
-      : [
-          `${streakPrefix}${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
-          `Stage ${world.id}-${stageInWorld}\u300C${stage.name}\u300D`,
-          `${starEmojis} \u30AF\u30EA\u30A2\uFF01`,
-          `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
-          badgeSuffix,
-          `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u7269\u7406\u30D1\u30BA\u30EB`,
-        ].join('\n');
+    const streakText = streak >= 3 ? ` ${streak}\u65E5\u9023\u7D9A\uD83D\uDD25` : '';
+    const text = `${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 Stage ${world.id}-${stageInWorld}${streakText} ${starEmojis}\u30AF\u30EA\u30A2\uFF01 #\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u30D1\u30BA\u30EB\u30B2\u30FC\u30E0`;
 
     try {
       if (Platform.OS === 'web') {
@@ -175,6 +160,7 @@ export default function ResultScreen() {
             stageInWorld,
             perfectCount,
             totalCleared,
+            streak,
           });
         }
 

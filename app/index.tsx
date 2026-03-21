@@ -80,6 +80,14 @@ export default function TitleScreen() {
           style={styles.dailyButton}
         />
 
+        <Button
+          title="ランキング"
+          onPress={() => router.push('/ranking')}
+          variant="secondary"
+          icon="🏆"
+          style={styles.dailyButton}
+        />
+
         <View style={styles.bottomRow}>
           <Button
             title="設定"

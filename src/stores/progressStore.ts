@@ -20,6 +20,7 @@ const DEFAULT_PROGRESS: PlayerProgress = {
   },
   totalLaunches: 0,
   totalPlayTimeMs: 0,
+  rankingEntries: [],
 };
 
 interface ProgressStore extends PlayerProgress {
@@ -70,6 +71,7 @@ export const useProgressStore = create<ProgressStore>((set, get) => ({
         dailyChallenge: state.dailyChallenge,
         totalLaunches: state.totalLaunches,
         totalPlayTimeMs: state.totalPlayTimeMs,
+        rankingEntries: state.rankingEntries,
       };
       await AsyncStorage.setItem(STORAGE_KEYS.PLAYER_PROGRESS, JSON.stringify(data));
     } catch {
@@ -104,10 +106,18 @@ export const useProgressStore = create<ProgressStore>((set, get) => ({
     const newCleared = { ...state.clearedStages, [stageId]: newResult };
     const totalStars = Object.values(newCleared).reduce((sum, r) => sum + r.stars, 0);
 
+    const scoreValue = Math.round(stars * 1000 + fuelRemaining * 500);
+    const newEntry = { score: scoreValue, date: new Date().toISOString(), stageId, stars };
+    const currentEntries = state.rankingEntries ?? [];
+    const updatedEntries = [...currentEntries, newEntry]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 50);
+
     set({
       clearedStages: newCleared,
       totalStars,
       coins: state.coins + coinReward,
+      rankingEntries: updatedEntries,
     });
 
     get().checkWorldUnlocks();

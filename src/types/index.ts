@@ -144,6 +144,7 @@ export interface PlayerProgress {
   dailyChallenge: DailyChallengeProgress;
   totalLaunches: number;
   totalPlayTimeMs: number;
+  rankingEntries?: Array<{ score: number; date: string; stageId: number; stars: number }>;
 }
 
 export interface AchievementProgress {
