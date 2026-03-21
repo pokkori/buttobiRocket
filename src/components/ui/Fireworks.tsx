@@ -16,16 +16,17 @@ interface Particle {
 
 const COLORS = ['#FFD700', '#FF6B6B', '#00BFFF', '#7CFC00', '#FF69B4', '#FFA500', '#BA55D3'];
 
-function createParticles(count: number): Particle[] {
+function createParticles(count: number, burstCount: number = 5): Particle[] {
   const particles: Particle[] = [];
-  // Create several burst points
-  const bursts = [
+  // Create burst points based on burstCount
+  const allBursts = [
     { x: SW * 0.3, y: SH * 0.25 },
     { x: SW * 0.7, y: SH * 0.2 },
     { x: SW * 0.5, y: SH * 0.35 },
     { x: SW * 0.2, y: SH * 0.4 },
     { x: SW * 0.8, y: SH * 0.3 },
   ];
+  const bursts = allBursts.slice(0, Math.min(burstCount, allBursts.length));
 
   for (let b = 0; b < bursts.length; b++) {
     const burst = bursts[b];
@@ -50,10 +51,11 @@ function createParticles(count: number): Particle[] {
 
 interface FireworksProps {
   active: boolean;
+  burstCount?: number;
 }
 
-export function Fireworks({ active }: FireworksProps) {
-  const particles = useRef<Particle[]>(createParticles(40)).current;
+export function Fireworks({ active, burstCount = 5 }: FireworksProps) {
+  const particles = useRef<Particle[]>(createParticles(burstCount >= 5 ? 40 : burstCount * 8, burstCount)).current;
 
   useEffect(() => {
     if (!active) return;

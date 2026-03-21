@@ -136,19 +136,38 @@ export default function ResultScreen() {
     }
   };
 
+  // Clear text and fireworks config based on star count
+  const clearLabel = stars === 3 ? '\u2728 PERFECT! \u2728' : stars === 2 ? '\u2728 GREAT! \u2728' : '\u2728 CLEAR! \u2728';
+  const fireworksBurstCount = stars === 3 ? 5 : stars === 2 ? 2 : 0;
+
+  // Scale animation for 1-star clear text
+  const clearTextScale = useRef(new Animated.Value(0.5)).current;
+  useEffect(() => {
+    if (stars === 1) {
+      Animated.spring(clearTextScale, {
+        toValue: 1,
+        friction: 5,
+        tension: 60,
+        useNativeDriver: true,
+      }).start();
+    } else {
+      clearTextScale.setValue(1);
+    }
+  }, [stars]);
+
   return (
     <SafeAreaView style={styles.container}>
-      {/* Fireworks for 3 stars */}
-      <Fireworks active={stars === 3} />
+      {/* Fireworks: 2 stars = 2 bursts, 3 stars = 5 bursts */}
+      <Fireworks active={stars >= 2} burstCount={fireworksBurstCount} />
 
       <View style={styles.header}>
         <CoinDisplay amount={coins} />
       </View>
 
       <View style={styles.center}>
-        <Text style={styles.clearText}>
-          {stars === 3 ? '\u2728 PERFECT! \u2728' : '\u2728 CLEAR! \u2728'}
-        </Text>
+        <Animated.Text style={[styles.clearText, stars === 1 && { transform: [{ scale: clearTextScale }] }]}>
+          {clearLabel}
+        </Animated.Text>
         <Text style={styles.stageName}>
           {'Stage ' + world.id + '-' + stageInWorld + '\u300C' + stage.name + '\u300D'}
         </Text>
