@@ -9,10 +9,27 @@ import { COLORS } from '../../src/constants/colors';
 import { getTodayString } from '../../src/utils/math';
 import { useGameStore } from '../../src/stores/gameStore';
 import { StageData } from '../../src/types';
+import { getStageById } from '../../src/data/stages';
+
+// getTodayRecommendedStage: 日付から決定論的にステージIDを返す
+function getTodayRecommendedStage(clearedStages: Record<number, { stars: number }>): number {
+  const today = new Date();
+  const dayOfYear = Math.floor(
+    (today.getTime() - new Date(today.getFullYear(), 0, 0).getTime()) / 86400000
+  );
+  // クリア済みステージの中から日付シードで1つ選ぶ。未クリアなら最小未クリアID
+  const clearedIds = Object.keys(clearedStages).map(Number).filter(id => id < 9999);
+  if (clearedIds.length === 0) return 1;
+  const idx = dayOfYear % clearedIds.length;
+  return clearedIds[idx];
+}
 
 export default function DailyScreen() {
   const router = useRouter();
   const daily = getDailyChallenge();
+  const clearedStages = useProgressStore(s => s.clearedStages);
+  const recommendedStageId = getTodayRecommendedStage(clearedStages);
+  const recommendedStage = getStageById(recommendedStageId);
   const streak = useProgressStore(s => s.dailyChallenge.streak);
   const todayCleared = useProgressStore(s => s.dailyChallenge.todayCleared);
   const lastPlayed = useProgressStore(s => s.dailyChallenge.lastPlayedDate);
@@ -49,6 +66,23 @@ export default function DailyScreen() {
       <View style={styles.content}>
         {actualStreak > 0 && (
           <Text style={styles.streak}>🔥 連続 {actualStreak}日目! 🔥</Text>
+        )}
+
+        {recommendedStage && (
+          <View style={styles.recommendCard}>
+            <Text style={styles.recommendLabel}>🚀 今日のおすすめステージ</Text>
+            <Text style={styles.recommendName}>「{recommendedStage.name}」</Text>
+            <Button
+              title="今すぐ挑戦"
+              onPress={() => {
+                setStage(recommendedStage);
+                router.push(`/game/${recommendedStageId}`);
+              }}
+              variant="secondary"
+              size="small"
+              icon="▶"
+            />
+          </View>
         )}
 
         <View style={styles.challengeCard}>
@@ -124,4 +158,16 @@ const styles = StyleSheet.create({
   bonusDays: { fontSize: 13, fontWeight: '700', color: COLORS.text },
   bonusReward: { fontSize: 11, color: COLORS.accent },
   bonusCheck: { fontSize: 12 },
+  recommendCard: {
+    backgroundColor: 'rgba(0,191,255,0.1)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0,191,255,0.4)',
+    marginBottom: 20,
+    alignItems: 'center',
+    gap: 8,
+  },
+  recommendLabel: { fontSize: 13, color: '#00BFFF', fontWeight: '700' },
+  recommendName: { fontSize: 18, fontWeight: '800', color: COLORS.text, textAlign: 'center' },
 });
