@@ -13,6 +13,7 @@ export interface ShareCardOptions {
   perfectCount?: number;
   totalCleared?: number;
   streak?: number;
+  fuelRemaining?: number;
 }
 
 export async function generateShareCard(options: ShareCardOptions): Promise<Blob | null> {
@@ -183,6 +184,18 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
     ctx.font = 'bold 30px sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(`\uD83D\uDD25 ${options.streak}\u65E5\u9023\u7D9A\u30AF\u30EA\u30A2!`, badgeX + 15, badgeY + 43);
+  }
+
+  // Fuel BIG NUMBER (right half)
+  if (options.fuelRemaining !== undefined) {
+    const pct = options.fuelRemaining;
+    ctx.font = "bold 110px sans-serif";
+    ctx.fillStyle = pct >= 80 ? "#00FF88" : "#4488FF";
+    ctx.textAlign = "center";
+    ctx.fillText(`${pct}%`, 900, 300);
+    ctx.font = "bold 36px sans-serif";
+    ctx.fillStyle = "#FFFFFF99";
+    ctx.fillText("燃料残量", 900, 360);
   }
 
   // Hashtag

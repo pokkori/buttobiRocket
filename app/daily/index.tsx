@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getDailyChallenge } from '../../src/data/dailyChallenges';
@@ -39,6 +39,23 @@ export default function DailyScreen() {
   const today = getTodayString();
   const isToday = lastPlayed === today;
   const actualStreak = isToday ? streak : (lastPlayed ? streak : 0);
+
+  const [countdown, setCountdown] = useState("");
+  useEffect(() => {
+    const update = () => {
+      const now = new Date();
+      const midnight = new Date(now);
+      midnight.setHours(24, 0, 0, 0);
+      const diff = Math.floor((midnight.getTime() - now.getTime()) / 1000);
+      const h = Math.floor(diff / 3600).toString().padStart(2, "0");
+      const m = Math.floor((diff % 3600) / 60).toString().padStart(2, "0");
+      const s = (diff % 60).toString().padStart(2, "0");
+      setCountdown(`${h}:${m}:${s}`);
+    };
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const handlePlay = () => {
     // Create a virtual stage from the daily challenge config
@@ -96,6 +113,8 @@ export default function DailyScreen() {
             <Text style={styles.clearedText}>✅ 今日のチャレンジはクリア済み</Text>
           )}
         </View>
+
+        <Text style={{ fontSize: 14, color: "#888" }}>次のデイリーまで {countdown}</Text>
 
         <Button
           title={isToday && todayCleared ? 'もう一度挑戦' : 'チャレンジ開始'}

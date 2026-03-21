@@ -11,7 +11,8 @@ export default function RankingScreen() {
   const coins = useProgressStore(s => s.coins);
   const streak = useProgressStore(s => s.dailyChallenge.streak);
   const clearedStages = useProgressStore(s => s.clearedStages);
-  const todayCount = Object.values(clearedStages).filter(r => r.clearCount > 0).length;
+  const today = new Date().toISOString().split("T")[0];
+  const todayCount = entries.filter(e => e.date?.startsWith(today)).length;
   const top10 = entries.slice(0, 10);
   return (
     <SafeAreaView style={styles.container}>

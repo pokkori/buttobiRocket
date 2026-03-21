@@ -33,6 +33,7 @@ export default function ResultScreen() {
   const perfectCount = Object.values(clearedStages).filter(s => s.stars >= 3).length;
 
   const finalTrail = useGameStore(s => s.finalTrail);
+  const fuelRemaining = Math.round(fuel * 100);
 
   // Trajectory preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -115,6 +116,7 @@ export default function ResultScreen() {
         perfectCount,
         totalCleared,
         streak,
+        fuelRemaining: Math.round(fuel * 100),
       }).then(blob => {
         if (blob) {
           setPreviewUrl(URL.createObjectURL(blob));
@@ -144,14 +146,12 @@ export default function ResultScreen() {
   const starEmojis = Array(stars).fill(STAR_EMOJI).join('');
 
   const handleShare = async () => {
-    const rankText = perfectCount >= 10
-      ? `⭐全クリア王${perfectCount}ステージ`
-      : `★${perfectCount}ステージパーフェクト`;
-    const streakBoast = streak >= 3 ? ` ${streak}日連続🔥` : '';
-    const fuelBoast = Math.round(fuel * 100) >= 70
-      ? '燃料節約マスター💎'
-      : `残り燃料${Math.round(fuel * 100)}%`;
-    const text = `${ROCKET} Stage ${world.id}-${stageInWorld}「${stage.name}」クリア！${streakBoast} ${starEmojis}\n${fuelBoast} | ${rankText}\nあなたは解ける？👇 #ぶっ飛びロケット #重力パズル #物理ゲーム`;
+    const fuelText = fuelRemaining >= 80
+      ? `燃料${fuelRemaining}%残し💎爆速クリア`
+      : `燃料${fuelRemaining}%で激突クリア🚀`;
+    const isDaily = stageId === "daily";
+    const dailyLabel = isDaily ? "【デイリー】" : "";
+    const text = `${dailyLabel}🚀 ぶっ飛びロケット\n${fuelText}\nステージ: ${stageId} ⭐クリア！\nあなたは燃料どれだけ残せる？\n#ぶっ飛びロケット #物理ゲーム #ロケット #スマホゲーム`;
 
     try {
       if (Platform.OS === 'web') {
@@ -167,6 +167,7 @@ export default function ResultScreen() {
             perfectCount,
             totalCleared,
             streak,
+            fuelRemaining,
           });
         }
 
@@ -270,6 +271,11 @@ export default function ResultScreen() {
           <Text style={styles.statText}>{'\u7372\u5F97\u30B3\u30A4\u30F3: +' + coinReward}</Text>
           <Text style={styles.statText}>{'\u30AF\u30EA\u30A2\u6E08: ' + totalCleared + '\u30B9\u30C6\u30FC\u30B8 / \u2B50\uFF13: ' + perfectCount + '\u30B9\u30C6\u30FC\u30B8'}</Text>
         </View>
+
+        <Text style={{ fontSize: 64, fontWeight: "bold", color: fuelRemaining >= 80 ? "#00FF88" : "#4488FF" }}>
+          {displayFuel}%
+        </Text>
+        <Text style={{ fontSize: 18, color: "#999" }}>燃料残量</Text>
 
         {/* Trajectory preview thumbnail (web only) */}
         {Platform.OS === 'web' && previewUrl && (
