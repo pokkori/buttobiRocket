@@ -123,7 +123,7 @@ export default function ResultScreen() {
       `Stage ${world.id}-${stageInWorld}\u300C${stage.name}\u300D`,
       `${starEmojis} \u30AF\u30EA\u30A2\uFF01`,
       `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
-      `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
+      `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u7269\u7406\u30D1\u30BA\u30EB`,
     ].join('\n');
 
     try {
