@@ -20,6 +20,8 @@ import {
   playGoalSound,
   playCrashSound,
   playAbsorbedSound,
+  startBGM,
+  stopBGM,
 } from '../../src/utils/sound';
 
 const { width: SW } = Dimensions.get('window');
@@ -55,6 +57,10 @@ export default function GameScreen() {
       if (isFirstPlay && (sId === 1 || stage.hint)) {
         setShowTutorial(true);
       }
+      // Start BGM for this world
+      if (Platform.OS === 'web' && world) {
+        startBGM(world.id);
+      }
     }
   }, [sId]);
 
@@ -87,6 +93,10 @@ export default function GameScreen() {
   useEffect(() => {
     if (phase === 'goal' && stage) {
       // Phase transitions to 'goal' after slow-motion finishes
+      // Fade out BGM
+      if (Platform.OS === 'web') {
+        stopBGM();
+      }
       const stars = calculateStars(fuel, stage.starThresholds);
       const timeout = setTimeout(() => {
         router.replace(`/result/${sId}?stars=${stars}&fuel=${fuel}`);
@@ -147,11 +157,12 @@ export default function GameScreen() {
     }
   }, [proximity, phase]);
 
-  // Cleanup flying sound on unmount
+  // Cleanup flying sound and BGM on unmount
   useEffect(() => {
     return () => {
       if (Platform.OS === 'web') {
         stopFlyingSound();
+        stopBGM();
       }
     };
   }, []);

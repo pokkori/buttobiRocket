@@ -5,9 +5,11 @@ import { Button } from '../../src/components/ui/Button';
 import { CoinDisplay } from '../../src/components/ui/CoinDisplay';
 import { Fireworks } from '../../src/components/ui/Fireworks';
 import { useProgressStore } from '../../src/stores/progressStore';
+import { useGameStore } from '../../src/stores/gameStore';
 import { getStageById } from '../../src/data/stages';
 import { getWorldForStage } from '../../src/data/worlds';
 import { COLORS } from '../../src/constants/colors';
+import { generateShareCard } from '../../src/utils/shareCard';
 
 export default function ResultScreen() {
   const router = useRouter();
@@ -113,6 +115,8 @@ export default function ResultScreen() {
 
   const starEmojis = Array(stars).fill(STAR_EMOJI).join('');
 
+  const finalTrail = useGameStore(s => s.finalTrail);
+
   const handleShare = async () => {
     const text = [
       `${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
@@ -121,9 +125,25 @@ export default function ResultScreen() {
       `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
       `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
     ].join('\n');
+
     try {
       if (Platform.OS === 'web') {
-        if (typeof navigator !== 'undefined' && navigator.share) {
+        // Try to generate share card image
+        let shareBlob: Blob | null = null;
+        if (finalTrail.length > 1) {
+          shareBlob = await generateShareCard({
+            trail: finalTrail,
+            stage,
+            stars,
+            worldId: world.id,
+            stageInWorld,
+          });
+        }
+
+        if (typeof navigator !== 'undefined' && navigator.share && shareBlob) {
+          const file = new File([shareBlob], 'rocket-fling-clear.png', { type: 'image/png' });
+          await navigator.share({ text, files: [file] });
+        } else if (typeof navigator !== 'undefined' && navigator.share) {
           await navigator.share({ text });
         } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
           await navigator.clipboard.writeText(text);

@@ -240,3 +240,255 @@ export function playAbsorbedSound(): void {
   playTone(ctx, 'sine', 200, 20, 0.5, 0.3 * vol);
   playTone(ctx, 'sine', 204, 22, 0.5, 0.3 * vol);
 }
+
+// =============================================
+// BGM System (per-world procedural music)
+// =============================================
+
+let bgmNodes: { oscs: OscillatorNode[]; gains: GainNode[]; masterGain: GainNode; intervalId: ReturnType<typeof setInterval> | null } | null = null;
+
+export function startBGM(worldId: number): void {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const vol = getBgmVolume();
+  if (vol <= 0) return;
+  stopBGM();
+
+  const masterGain = ctx.createGain();
+  masterGain.gain.setValueAtTime(0, ctx.currentTime);
+  masterGain.gain.linearRampToValueAtTime(0.15 * vol, ctx.currentTime + 1); // fade in
+  masterGain.connect(ctx.destination);
+
+  const oscs: OscillatorNode[] = [];
+  const gains: GainNode[] = [];
+  let intervalId: ReturnType<typeof setInterval> | null = null;
+
+  switch (worldId) {
+    case 1: {
+      // W1: C pentatonic (C4-E4-G4-A4) sine 80bpm + C3 drone
+      const drone = ctx.createOscillator();
+      drone.type = 'sine';
+      drone.frequency.setValueAtTime(130.81, ctx.currentTime); // C3
+      const droneGain = ctx.createGain();
+      droneGain.gain.setValueAtTime(0.06 * vol, ctx.currentTime);
+      drone.connect(droneGain);
+      droneGain.connect(masterGain);
+      drone.start();
+      oscs.push(drone);
+      gains.push(droneGain);
+
+      const notes = [261.63, 329.63, 392.00, 440.00]; // C4-E4-G4-A4
+      let noteIdx = 0;
+      const bpmInterval = 60000 / 80; // 750ms
+      intervalId = setInterval(() => {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const osc = c.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(notes[noteIdx % notes.length], t);
+        const g = c.createGain();
+        g.gain.setValueAtTime(0.08 * vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + 0.5);
+        noteIdx++;
+      }, bpmInterval);
+      break;
+    }
+    case 2: {
+      // W2: C minor (C-Eb-G-Bb) 60bpm + filter sweep
+      const notes = [261.63, 311.13, 392.00, 466.16]; // C4-Eb4-G4-Bb4
+      let noteIdx = 0;
+      const bpmInterval = 60000 / 60; // 1000ms
+
+      // Filter sweep drone
+      const drone = ctx.createOscillator();
+      drone.type = 'sawtooth';
+      drone.frequency.setValueAtTime(130.81, ctx.currentTime);
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(200, ctx.currentTime);
+      // Sweep filter up and down
+      const sweepDrone = () => {
+        const c = getCtx();
+        if (!c) return;
+        filter.frequency.linearRampToValueAtTime(800, c.currentTime + 4);
+        setTimeout(() => {
+          const c2 = getCtx();
+          if (!c2) return;
+          filter.frequency.linearRampToValueAtTime(200, c2.currentTime + 4);
+        }, 4000);
+      };
+      sweepDrone();
+      const sweepInterval = setInterval(sweepDrone, 8000);
+
+      const droneGain = ctx.createGain();
+      droneGain.gain.setValueAtTime(0.04 * vol, ctx.currentTime);
+      drone.connect(filter);
+      filter.connect(droneGain);
+      droneGain.connect(masterGain);
+      drone.start();
+      oscs.push(drone);
+      gains.push(droneGain);
+
+      intervalId = setInterval(() => {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const osc = c.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(notes[noteIdx % notes.length], t);
+        const g = c.createGain();
+        g.gain.setValueAtTime(0.07 * vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.7);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + 0.7);
+        noteIdx++;
+      }, bpmInterval);
+
+      // Store sweep interval for cleanup
+      const origCleanup = intervalId;
+      intervalId = setInterval(() => {}, 999999) as any; // placeholder
+      clearInterval(intervalId);
+      intervalId = origCleanup;
+      // We need to clear sweepInterval too - store on bgmNodes after
+      const cleanSweep = () => clearInterval(sweepInterval);
+      (masterGain as any)._cleanSweep = cleanSweep;
+      break;
+    }
+    case 3: {
+      // W3: whole-tone scale arpeggio 90bpm
+      const notes = [261.63, 293.66, 329.63, 369.99, 415.30, 466.16]; // C-D-E-F#-G#-Bb
+      let noteIdx = 0;
+      const bpmInterval = 60000 / 90;
+      intervalId = setInterval(() => {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const osc = c.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(notes[noteIdx % notes.length], t);
+        const g = c.createGain();
+        g.gain.setValueAtTime(0.08 * vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + 0.4);
+        noteIdx++;
+      }, bpmInterval);
+      break;
+    }
+    case 4: {
+      // W4: C Major7 arp (C-E-G-B) 100bpm
+      const notes = [261.63, 329.63, 392.00, 493.88]; // C4-E4-G4-B4
+      let noteIdx = 0;
+      const bpmInterval = 60000 / 100;
+      intervalId = setInterval(() => {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+        const osc = c.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(notes[noteIdx % notes.length], t);
+        const g = c.createGain();
+        g.gain.setValueAtTime(0.08 * vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + 0.35);
+        noteIdx++;
+      }, bpmInterval);
+      break;
+    }
+    case 5:
+    default: {
+      // W5: chromatic bass + hihat 120bpm
+      const baseNotes = [130.81, 138.59, 146.83, 155.56, 164.81, 174.61]; // C3 chromatic up
+      let noteIdx = 0;
+      const bpmInterval = 60000 / 120; // 500ms
+
+      intervalId = setInterval(() => {
+        const c = getCtx();
+        if (!c) return;
+        const t = c.currentTime;
+
+        // Bass note
+        const osc = c.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(baseNotes[noteIdx % baseNotes.length], t);
+        const g = c.createGain();
+        g.gain.setValueAtTime(0.06 * vol, t);
+        g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+        osc.connect(g);
+        g.connect(masterGain);
+        osc.start(t);
+        osc.stop(t + 0.3);
+
+        // Hihat (noise burst)
+        const bufLen = Math.floor(c.sampleRate * 0.05);
+        const buf = c.createBuffer(1, bufLen, c.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let j = 0; j < bufLen; j++) {
+          data[j] = Math.random() * 2 - 1;
+        }
+        const noise = c.createBufferSource();
+        noise.buffer = buf;
+        const hg = c.createGain();
+        hg.gain.setValueAtTime(0.04 * vol, t);
+        hg.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+        const hpf = c.createBiquadFilter();
+        hpf.type = 'highpass';
+        hpf.frequency.setValueAtTime(8000, t);
+        noise.connect(hpf);
+        hpf.connect(hg);
+        hg.connect(masterGain);
+        noise.start(t);
+        noise.stop(t + 0.05);
+
+        noteIdx++;
+      }, bpmInterval);
+      break;
+    }
+  }
+
+  bgmNodes = { oscs, gains, masterGain, intervalId };
+}
+
+export function stopBGM(): void {
+  if (!bgmNodes) return;
+  const ctx = getCtx();
+
+  // Fade out
+  if (ctx && bgmNodes.masterGain) {
+    try {
+      bgmNodes.masterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
+    } catch { /* ignore */ }
+  }
+
+  // Cleanup sweep interval if exists
+  if (bgmNodes.masterGain && (bgmNodes.masterGain as any)._cleanSweep) {
+    (bgmNodes.masterGain as any)._cleanSweep();
+  }
+
+  if (bgmNodes.intervalId) {
+    clearInterval(bgmNodes.intervalId);
+  }
+
+  // Stop oscillators after fade
+  setTimeout(() => {
+    if (bgmNodes) {
+      for (const osc of bgmNodes.oscs) {
+        try { osc.stop(); } catch { /* already stopped */ }
+      }
+      try { bgmNodes.masterGain.disconnect(); } catch { /* ignore */ }
+      bgmNodes = null;
+    }
+  }, 600);
+}

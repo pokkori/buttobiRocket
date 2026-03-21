@@ -14,6 +14,16 @@ export interface ProximityData {
   closestBlackHoleDist: number;
 }
 
+export interface GoalParticle {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  color: string;
+  life: number;
+  maxLife: number;
+}
+
 interface GameStore extends GameState {
   frameCount: number;
   usedBoosters: Set<string>;
@@ -23,6 +33,8 @@ interface GameStore extends GameState {
   proximity: ProximityData;
   timeScale: number;
   goalSlowMoTimer: number;
+  finalTrail: Vector2D[];
+  goalParticles: GoalParticle[];
   setStage: (stage: StageData) => void;
   reset: () => void;
   startDrag: (pos: Vector2D) => void;
@@ -58,6 +70,36 @@ const defaultSlingshot: SlingshotState = {
 
 const defaultProximity: ProximityData = { closestPlanetDist: 999, closestBlackHoleDist: 999 };
 
+function generateGoalParticles(position: Vector2D, count: number): GoalParticle[] {
+  const colors = ['#FFD700', '#FFA500', '#FF6347'];
+  const particles: GoalParticle[] = [];
+  for (let i = 0; i < count; i++) {
+    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+    const speed = 0.003 + Math.random() * 0.008;
+    const life = 40 + Math.random() * 40;
+    particles.push({
+      x: position.x,
+      y: position.y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      color: colors[i % colors.length],
+      life,
+      maxLife: life,
+    });
+  }
+  return particles;
+}
+
+function updateGoalParticles(particles: GoalParticle[]): GoalParticle[] {
+  return particles.map(p => ({
+    ...p,
+    x: p.x + p.vx,
+    y: p.y + p.vy,
+    vy: p.vy + 0.0001, // slight gravity
+    life: p.life - 1,
+  })).filter(p => p.life > 0);
+}
+
 export const useGameStore = create<GameStore>((set, get) => ({
   phase: 'aiming',
   rocket: { ...defaultRocket },
@@ -73,6 +115,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   proximity: { ...defaultProximity },
   timeScale: 1,
   goalSlowMoTimer: 0,
+  finalTrail: [],
+  goalParticles: [],
 
   setStage: (stage) => {
     set({
@@ -94,6 +138,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       proximity: { ...defaultProximity },
       timeScale: 1,
       goalSlowMoTimer: 0,
+      finalTrail: [],
+      goalParticles: [],
     });
   },
 
@@ -118,6 +164,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       proximity: { ...defaultProximity },
       timeScale: 1,
       goalSlowMoTimer: 0,
+      finalTrail: [],
+      goalParticles: [],
     }));
   },
 
@@ -183,9 +231,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Goal slow-motion countdown: keep ticking with reduced timeScale until timer expires
     if (state.goalSlowMoTimer > 0) {
       const remaining = state.goalSlowMoTimer - 1;
+      // Update goal particles
+      const updatedParticles = updateGoalParticles(state.goalParticles);
       if (remaining <= 0) {
         // Slow-motion finished, transition to goal phase
-        set({ phase: 'goal', timeScale: 1, goalSlowMoTimer: 0 });
+        set({ phase: 'goal', timeScale: 1, goalSlowMoTimer: 0, goalParticles: updatedParticles });
         return;
       }
       // Ease timeScale back toward 1.0 in the last 15 frames
@@ -199,6 +249,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         elapsedMs: state.elapsedMs + dt * 1000,
         timeScale: newTimeScale,
         goalSlowMoTimer: remaining,
+        goalParticles: updatedParticles,
       });
       return;
     }
@@ -236,10 +287,24 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let wormholeCd = newCooldown;
     let collisionEvent: CollisionEvent = 'none';
 
+    // Calculate star count for particle scaling
+    const calcStarsForParticles = (): number => {
+      if (!state.currentStage) return 1;
+      const f = newRocket.fuel;
+      const t = state.currentStage.starThresholds;
+      if (f >= t.star3) return 3;
+      if (f >= t.star2) return 2;
+      return 1;
+    };
+
     switch (collision.type) {
-      case 'goal':
+      case 'goal': {
         // Start slow-motion instead of immediate goal phase
         collisionEvent = 'goal';
+        const starCount = calcStarsForParticles();
+        // Generate particles: star3=100, star2=50, star1=25
+        const particleCount = starCount === 3 ? 100 : starCount === 2 ? 50 : 25;
+        const particles = generateGoalParticles(newRocket.position, particleCount);
         set({
           rocket: newRocket,
           frameCount: newFrameCount,
@@ -250,8 +315,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
           timeScale: 0.3,
           goalSlowMoTimer: 45, // ~0.75s real time at 60fps
           proximity: { closestPlanetDist, closestBlackHoleDist },
+          finalTrail: [...newRocket.trail],
+          goalParticles: particles,
         });
         return; // Skip the normal set() at the bottom
+      }
       case 'planet':
         newPhase = 'crashed';
         collisionEvent = 'crashed';
