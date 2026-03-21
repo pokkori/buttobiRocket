@@ -1,0 +1,18 @@
+export const COLORS = {
+  background: '#0A0E27',
+  primary: '#00BFFF',
+  accent: '#FFD700',
+  danger: '#FF4444',
+  success: '#00FF7F',
+  text: '#FFFFFF',
+  textSecondary: '#8899AA',
+  cardBg: 'rgba(255,255,255,0.08)',
+  cardBorder: 'rgba(255,255,255,0.15)',
+  locked: '#555555',
+  star: '#FFD700',
+  starEmpty: '#444444',
+  rarityCommon: '#B0B0B0',
+  rarityRare: '#4A90D9',
+  rarityEpic: '#9B59B6',
+  rarityLegendary: '#FFD700',
+} as const;
