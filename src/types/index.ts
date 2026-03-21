@@ -91,6 +91,7 @@ export interface StageData {
   id: number;
   worldId: number;
   name: string;
+  hint?: string;
   rocketStart: NormalizedPosition;
   rocketAngle: number;
   goalStar: GoalStar;

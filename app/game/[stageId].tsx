@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } fr
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GameCanvas } from '../../src/components/game/GameCanvas';
 import { FuelGauge } from '../../src/components/game/FuelGauge';
+import { TutorialOverlay } from '../../src/components/game/TutorialOverlay';
 import { useGameStore } from '../../src/stores/gameStore';
 import { useProgressStore } from '../../src/stores/progressStore';
 import { getStageById } from '../../src/data/stages';
@@ -26,10 +27,19 @@ export default function GameScreen() {
   const setPaused = useGameStore(s => s.setPaused);
   const isPaused = useGameStore(s => s.isPaused);
   const incrementLaunches = useProgressStore(s => s.incrementLaunches);
+  const clearedStages = useProgressStore(s => s.clearedStages);
   const [launched, setLaunched] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   useEffect(() => {
-    if (stage) setStage(stage);
+    if (stage) {
+      setStage(stage);
+      // Show tutorial on first play of each stage (or always for stage 1)
+      const isFirstPlay = !clearedStages[sId];
+      if (isFirstPlay && (sId === 1 || stage.hint)) {
+        setShowTutorial(true);
+      }
+    }
   }, [sId]);
 
   useEffect(() => {
@@ -89,6 +99,15 @@ export default function GameScreen() {
           <TouchableOpacity onPress={handleRetry} style={styles.retryBtn}>
             <Text style={styles.retryText}>🔄 リトライ</Text>
           </TouchableOpacity>
+        )}
+
+        {/* Tutorial overlay */}
+        {showTutorial && phase === 'aiming' && (
+          <TutorialOverlay
+            stageId={sId}
+            hint={stage.hint}
+            onDismiss={() => setShowTutorial(false)}
+          />
         )}
 
         {/* Back button (shown when paused) */}

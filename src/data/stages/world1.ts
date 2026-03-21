@@ -1,26 +1,30 @@
 import { StageData } from '../../types';
 
 export const WORLD1_STAGES: StageData[] = [
+  // === Tutorial Zone (1-4) ===
   {
     id: 1, worldId: 1, name: '発射!', difficulty: 1,
+    hint: '引っ張って離そう！',
     rocketStart: { nx: 0.2, ny: 0.8 }, rocketAngle: -Math.PI / 4,
-    goalStar: { position: { nx: 0.8, ny: 0.2 }, radius: 0.04, pulseSpeed: 1.0 },
+    goalStar: { position: { nx: 0.8, ny: 0.2 }, radius: 0.05, pulseSpeed: 1.0 },
     planets: [], specialObjects: [],
     initialFuel: 1.0, starThresholds: { star3: 0.7, star2: 0.4, star1: 0 },
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
     id: 2, worldId: 1, name: 'ななめ撃ち', difficulty: 1,
+    hint: '点線は予測軌道だよ',
     rocketStart: { nx: 0.15, ny: 0.85 }, rocketAngle: -Math.PI / 3,
-    goalStar: { position: { nx: 0.85, ny: 0.15 }, radius: 0.035, pulseSpeed: 1.0 },
+    goalStar: { position: { nx: 0.85, ny: 0.15 }, radius: 0.04, pulseSpeed: 1.0 },
     planets: [], specialObjects: [],
     initialFuel: 1.0, starThresholds: { star3: 0.7, star2: 0.4, star1: 0 },
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
     id: 3, worldId: 1, name: '月面散歩', difficulty: 1,
+    hint: '惑星の引力に注意！近づくと曲がるよ',
     rocketStart: { nx: 0.15, ny: 0.7 }, rocketAngle: 0,
-    goalStar: { position: { nx: 0.85, ny: 0.3 }, radius: 0.035, pulseSpeed: 1.0 },
+    goalStar: { position: { nx: 0.85, ny: 0.3 }, radius: 0.04, pulseSpeed: 1.0 },
     planets: [{ id: 'p1', position: { nx: 0.5, ny: 0.5 }, mass: 8, radius: 0.04, color: '#C0C0C0', hasRing: false, type: 'rocky' }],
     specialObjects: [],
     initialFuel: 1.0, starThresholds: { star3: 0.6, star2: 0.3, star1: 0 },
@@ -28,15 +32,19 @@ export const WORLD1_STAGES: StageData[] = [
   },
   {
     id: 4, worldId: 1, name: '引力を感じろ', difficulty: 1,
+    hint: '大きい惑星は引力が強い！軌道を利用しよう',
     rocketStart: { nx: 0.1, ny: 0.9 }, rocketAngle: -Math.PI / 6,
-    goalStar: { position: { nx: 0.9, ny: 0.1 }, radius: 0.035, pulseSpeed: 1.0 },
+    goalStar: { position: { nx: 0.9, ny: 0.1 }, radius: 0.04, pulseSpeed: 1.0 },
     planets: [{ id: 'p1', position: { nx: 0.5, ny: 0.5 }, mass: 15, radius: 0.05, color: '#E8A87C', hasRing: false, type: 'rocky' }],
     specialObjects: [],
     initialFuel: 1.0, starThresholds: { star3: 0.6, star2: 0.3, star1: 0 },
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
+
+  // === Swing-by Basics (5-7) ===
   {
     id: 5, worldId: 1, name: 'スイングバイ', difficulty: 2,
+    hint: '惑星の横を通過して加速しろ！',
     rocketStart: { nx: 0.1, ny: 0.5 }, rocketAngle: 0,
     goalStar: { position: { nx: 0.9, ny: 0.5 }, radius: 0.03, pulseSpeed: 1.2 },
     planets: [{ id: 'p1', position: { nx: 0.5, ny: 0.35 }, mass: 20, radius: 0.05, color: '#D35400', hasRing: false, type: 'rocky' }],
@@ -46,6 +54,7 @@ export const WORLD1_STAGES: StageData[] = [
   },
   {
     id: 6, worldId: 1, name: '二つの衛星', difficulty: 2,
+    hint: '二つの惑星の間を通り抜けろ！',
     rocketStart: { nx: 0.1, ny: 0.85 }, rocketAngle: -Math.PI / 4,
     goalStar: { position: { nx: 0.9, ny: 0.15 }, radius: 0.03, pulseSpeed: 1.2 },
     planets: [
@@ -57,16 +66,20 @@ export const WORLD1_STAGES: StageData[] = [
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
-    id: 7, worldId: 1, name: '重い星', difficulty: 2,
+    id: 7, worldId: 1, name: '裏を回り込め!', difficulty: 2,
+    hint: '惑星の裏側を回り込んでゴールへ！',
     rocketStart: { nx: 0.15, ny: 0.75 }, rocketAngle: -Math.PI / 6,
-    goalStar: { position: { nx: 0.5, ny: 0.1 }, radius: 0.03, pulseSpeed: 1.2 },
+    goalStar: { position: { nx: 0.15, ny: 0.2 }, radius: 0.03, pulseSpeed: 1.2 },
     planets: [{ id: 'p1', position: { nx: 0.4, ny: 0.45 }, mass: 30, radius: 0.06, color: '#F39C12', hasRing: true, type: 'gas' }],
     specialObjects: [],
     initialFuel: 0.9, starThresholds: { star3: 0.55, star2: 0.25, star1: 0 },
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
+
+  // === Direction Puzzles (8-10) ===
   {
     id: 8, worldId: 1, name: 'Uターン', difficulty: 2,
+    hint: '重力で方向転換！上に撃って下に落ちろ',
     rocketStart: { nx: 0.5, ny: 0.85 }, rocketAngle: -Math.PI / 2,
     goalStar: { position: { nx: 0.5, ny: 0.15 }, radius: 0.03, pulseSpeed: 1.2 },
     planets: [{ id: 'p1', position: { nx: 0.75, ny: 0.5 }, mass: 25, radius: 0.05, color: '#9B59B6', hasRing: false, type: 'gas' }],
@@ -75,7 +88,8 @@ export const WORLD1_STAGES: StageData[] = [
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
-    id: 9, worldId: 1, name: 'ジグザグ', difficulty: 2,
+    id: 9, worldId: 1, name: 'ジグザグ航路', difficulty: 2,
+    hint: '惑星を交互に利用してジグザグに進め！',
     rocketStart: { nx: 0.1, ny: 0.9 }, rocketAngle: -Math.PI / 4,
     goalStar: { position: { nx: 0.9, ny: 0.9 }, radius: 0.03, pulseSpeed: 1.2 },
     planets: [
@@ -88,6 +102,7 @@ export const WORLD1_STAGES: StageData[] = [
   },
   {
     id: 10, worldId: 1, name: '土星リング', difficulty: 2,
+    hint: '巨大なリング惑星を周回せよ！',
     rocketStart: { nx: 0.1, ny: 0.5 }, rocketAngle: 0,
     goalStar: { position: { nx: 0.9, ny: 0.5 }, radius: 0.03, pulseSpeed: 1.2 },
     planets: [{ id: 'p1', position: { nx: 0.5, ny: 0.5 }, mass: 35, radius: 0.07, color: '#F1C40F', hasRing: true, type: 'gas' }],
@@ -95,8 +110,11 @@ export const WORLD1_STAGES: StageData[] = [
     initialFuel: 0.85, starThresholds: { star3: 0.5, star2: 0.2, star1: 0 },
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
+
+  // === Multi-planet Challenges (11-14) ===
   {
-    id: 11, worldId: 1, name: '二連星', difficulty: 2,
+    id: 11, worldId: 1, name: '連星トラップ', difficulty: 2,
+    hint: '2つの星が引き合う！間を抜けるか迂回するか',
     rocketStart: { nx: 0.5, ny: 0.9 }, rocketAngle: -Math.PI / 2,
     goalStar: { position: { nx: 0.5, ny: 0.1 }, radius: 0.03, pulseSpeed: 1.2 },
     planets: [
@@ -108,7 +126,8 @@ export const WORLD1_STAGES: StageData[] = [
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
-    id: 12, worldId: 1, name: '三角形', difficulty: 3,
+    id: 12, worldId: 1, name: '三角要塞', difficulty: 3,
+    hint: '三角形の隙間を見つけろ！斜めに射出がカギ',
     rocketStart: { nx: 0.1, ny: 0.9 }, rocketAngle: -Math.PI / 4,
     goalStar: { position: { nx: 0.9, ny: 0.1 }, radius: 0.025, pulseSpeed: 1.5 },
     planets: [
@@ -121,7 +140,8 @@ export const WORLD1_STAGES: StageData[] = [
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
-    id: 13, worldId: 1, name: '重力アシスト', difficulty: 3,
+    id: 13, worldId: 1, name: '逆方向スイング', difficulty: 3,
+    hint: 'ゴールはロケットの真上！重力で方向転換せよ',
     rocketStart: { nx: 0.1, ny: 0.5 }, rocketAngle: Math.PI / 6,
     goalStar: { position: { nx: 0.1, ny: 0.1 }, radius: 0.025, pulseSpeed: 1.5 },
     planets: [{ id: 'p1', position: { nx: 0.5, ny: 0.5 }, mass: 30, radius: 0.06, color: '#D35400', hasRing: true, type: 'gas' }],
@@ -130,7 +150,8 @@ export const WORLD1_STAGES: StageData[] = [
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
-    id: 14, worldId: 1, name: '大小二つ', difficulty: 3,
+    id: 14, worldId: 1, name: '大小の引力', difficulty: 3,
+    hint: '小さい惑星で微調整、大きい惑星で大きく曲がれ！',
     rocketStart: { nx: 0.15, ny: 0.85 }, rocketAngle: -Math.PI / 4,
     goalStar: { position: { nx: 0.85, ny: 0.15 }, radius: 0.025, pulseSpeed: 1.5 },
     planets: [
@@ -141,34 +162,39 @@ export const WORLD1_STAGES: StageData[] = [
     initialFuel: 0.8, starThresholds: { star3: 0.4, star2: 0.2, star1: 0 },
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
+
+  // === Precision Challenges (15-17) ===
   {
-    id: 15, worldId: 1, name: '狭い隙間', difficulty: 3,
+    id: 15, worldId: 1, name: '針の穴を通せ', difficulty: 3,
+    hint: '上下の惑星の隙間を狙え！わずかなズレが命取り',
     rocketStart: { nx: 0.1, ny: 0.5 }, rocketAngle: 0,
     goalStar: { position: { nx: 0.9, ny: 0.5 }, radius: 0.025, pulseSpeed: 1.5 },
     planets: [
-      { id: 'p1', position: { nx: 0.5, ny: 0.4 }, mass: 20, radius: 0.05, color: '#E74C3C', hasRing: false, type: 'lava' },
-      { id: 'p2', position: { nx: 0.5, ny: 0.6 }, mass: 20, radius: 0.05, color: '#3498DB', hasRing: false, type: 'ice' },
+      { id: 'p1', position: { nx: 0.5, ny: 0.38 }, mass: 22, radius: 0.05, color: '#E74C3C', hasRing: false, type: 'lava' },
+      { id: 'p2', position: { nx: 0.5, ny: 0.62 }, mass: 22, radius: 0.05, color: '#3498DB', hasRing: false, type: 'ice' },
     ],
     specialObjects: [],
     initialFuel: 0.8, starThresholds: { star3: 0.4, star2: 0.2, star1: 0 },
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
-    id: 16, worldId: 1, name: '四つ角', difficulty: 3,
+    id: 16, worldId: 1, name: '四天王', difficulty: 3,
+    hint: '四隅の惑星の引力場を読め！中央突破がベスト',
     rocketStart: { nx: 0.5, ny: 0.9 }, rocketAngle: -Math.PI / 2,
     goalStar: { position: { nx: 0.5, ny: 0.1 }, radius: 0.025, pulseSpeed: 1.5 },
     planets: [
-      { id: 'p1', position: { nx: 0.3, ny: 0.3 }, mass: 12, radius: 0.035, color: '#E74C3C', hasRing: false, type: 'lava' },
-      { id: 'p2', position: { nx: 0.7, ny: 0.3 }, mass: 12, radius: 0.035, color: '#3498DB', hasRing: false, type: 'ice' },
-      { id: 'p3', position: { nx: 0.3, ny: 0.7 }, mass: 12, radius: 0.035, color: '#2ECC71', hasRing: false, type: 'rocky' },
-      { id: 'p4', position: { nx: 0.7, ny: 0.7 }, mass: 12, radius: 0.035, color: '#F39C12', hasRing: false, type: 'gas' },
+      { id: 'p1', position: { nx: 0.3, ny: 0.3 }, mass: 14, radius: 0.035, color: '#E74C3C', hasRing: false, type: 'lava' },
+      { id: 'p2', position: { nx: 0.7, ny: 0.3 }, mass: 14, radius: 0.035, color: '#3498DB', hasRing: false, type: 'ice' },
+      { id: 'p3', position: { nx: 0.3, ny: 0.7 }, mass: 14, radius: 0.035, color: '#2ECC71', hasRing: false, type: 'rocky' },
+      { id: 'p4', position: { nx: 0.7, ny: 0.7 }, mass: 14, radius: 0.035, color: '#F39C12', hasRing: false, type: 'gas' },
     ],
     specialObjects: [],
     initialFuel: 0.8, starThresholds: { star3: 0.4, star2: 0.15, star1: 0 },
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
-    id: 17, worldId: 1, name: 'カーブショット', difficulty: 3,
+    id: 17, worldId: 1, name: 'ブーメラン', difficulty: 3,
+    hint: '右に飛ばして重力で左に戻す！大胆にカーブ',
     rocketStart: { nx: 0.1, ny: 0.1 }, rocketAngle: Math.PI / 4,
     goalStar: { position: { nx: 0.1, ny: 0.9 }, radius: 0.025, pulseSpeed: 1.5 },
     planets: [
@@ -179,8 +205,11 @@ export const WORLD1_STAGES: StageData[] = [
     initialFuel: 0.75, starThresholds: { star3: 0.4, star2: 0.15, star1: 0 },
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
+
+  // === Boss Stages (18-20) ===
   {
-    id: 18, worldId: 1, name: '巨大木星', difficulty: 3,
+    id: 18, worldId: 1, name: '木星グラビティ', difficulty: 3,
+    hint: '超巨大惑星を利用して反対側へ回れ！',
     rocketStart: { nx: 0.1, ny: 0.85 }, rocketAngle: -Math.PI / 6,
     goalStar: { position: { nx: 0.85, ny: 0.85 }, radius: 0.025, pulseSpeed: 1.5 },
     planets: [{ id: 'p1', position: { nx: 0.5, ny: 0.4 }, mass: 50, radius: 0.08, color: '#D4A76A', hasRing: true, type: 'gas' }],
@@ -189,14 +218,15 @@ export const WORLD1_STAGES: StageData[] = [
     maxTrailLength: 300, bgColor: '#0A0E27',
   },
   {
-    id: 19, worldId: 1, name: 'ピンボール', difficulty: 3,
+    id: 19, worldId: 1, name: 'ピンボール地獄', difficulty: 3,
+    hint: '4つの惑星の間をピンボールのように跳ね回れ！',
     rocketStart: { nx: 0.5, ny: 0.95 }, rocketAngle: -Math.PI / 2,
     goalStar: { position: { nx: 0.5, ny: 0.05 }, radius: 0.025, pulseSpeed: 1.5 },
     planets: [
-      { id: 'p1', position: { nx: 0.3, ny: 0.7 }, mass: 10, radius: 0.035, color: '#E74C3C', hasRing: false, type: 'lava' },
-      { id: 'p2', position: { nx: 0.7, ny: 0.55 }, mass: 10, radius: 0.035, color: '#3498DB', hasRing: false, type: 'ice' },
-      { id: 'p3', position: { nx: 0.3, ny: 0.4 }, mass: 10, radius: 0.035, color: '#2ECC71', hasRing: false, type: 'rocky' },
-      { id: 'p4', position: { nx: 0.7, ny: 0.25 }, mass: 10, radius: 0.035, color: '#F1C40F', hasRing: false, type: 'gas' },
+      { id: 'p1', position: { nx: 0.25, ny: 0.7 }, mass: 12, radius: 0.035, color: '#E74C3C', hasRing: false, type: 'lava' },
+      { id: 'p2', position: { nx: 0.75, ny: 0.55 }, mass: 12, radius: 0.035, color: '#3498DB', hasRing: false, type: 'ice' },
+      { id: 'p3', position: { nx: 0.25, ny: 0.4 }, mass: 12, radius: 0.035, color: '#2ECC71', hasRing: false, type: 'rocky' },
+      { id: 'p4', position: { nx: 0.75, ny: 0.25 }, mass: 12, radius: 0.035, color: '#F1C40F', hasRing: false, type: 'gas' },
     ],
     specialObjects: [],
     initialFuel: 0.75, starThresholds: { star3: 0.35, star2: 0.15, star1: 0 },
@@ -204,6 +234,7 @@ export const WORLD1_STAGES: StageData[] = [
   },
   {
     id: 20, worldId: 1, name: '太陽系マスター', difficulty: 4,
+    hint: '全ての重力を読み切れ！中央の巨星が最大のカギ',
     rocketStart: { nx: 0.05, ny: 0.95 }, rocketAngle: -Math.PI / 4,
     goalStar: { position: { nx: 0.95, ny: 0.05 }, radius: 0.02, pulseSpeed: 2.0 },
     planets: [

@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Animated, Easing } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, SafeAreaView, Animated, Easing, Share, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Button } from '../../src/components/ui/Button';
 import { CoinDisplay } from '../../src/components/ui/CoinDisplay';
+import { Fireworks } from '../../src/components/ui/Fireworks';
 import { useProgressStore } from '../../src/stores/progressStore';
 import { getStageById } from '../../src/data/stages';
 import { getWorldForStage } from '../../src/data/worlds';
 import { COLORS } from '../../src/constants/colors';
-import { formatPercent } from '../../src/utils/math';
 
 export default function ResultScreen() {
   const router = useRouter();
@@ -19,6 +19,11 @@ export default function ResultScreen() {
   const world = getWorldForStage(sId);
   const clearStage = useProgressStore(s => s.clearStage);
   const coins = useProgressStore(s => s.coins);
+  const clearedStages = useProgressStore(s => s.clearedStages);
+
+  // Check if this is a new record (better stars than previous)
+  const prevResult = clearedStages[sId];
+  const isNewRecord = !prevResult || stars > (prevResult.stars || 0);
 
   // Star animations
   const starAnims = [
@@ -26,6 +31,14 @@ export default function ResultScreen() {
     useRef(new Animated.Value(0)).current,
     useRef(new Animated.Value(0)).current,
   ];
+
+  // Score countup animation
+  const fuelCountAnim = useRef(new Animated.Value(0)).current;
+  const [displayFuel, setDisplayFuel] = useState(0);
+
+  // New record flash
+  const recordFlash = useRef(new Animated.Value(0)).current;
+  const recordScale = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (stage) {
@@ -44,6 +57,44 @@ export default function ResultScreen() {
         }).start();
       }
     });
+
+    // Fuel countup
+    const fuelPercent = Math.round(fuel * 100);
+    fuelCountAnim.addListener(({ value }) => {
+      setDisplayFuel(Math.round(value));
+    });
+    Animated.timing(fuelCountAnim, {
+      toValue: fuelPercent,
+      duration: 800,
+      delay: 600,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+
+    // New record animation
+    if (isNewRecord) {
+      Animated.sequence([
+        Animated.delay(stars * 300 + 400),
+        Animated.parallel([
+          Animated.timing(recordFlash, {
+            toValue: 1,
+            duration: 500,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+          Animated.spring(recordScale, {
+            toValue: 1,
+            friction: 4,
+            tension: 80,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]).start();
+    }
+
+    return () => {
+      fuelCountAnim.removeAllListeners();
+    };
   }, []);
 
   if (!stage || !world) return null;
@@ -53,16 +104,53 @@ export default function ResultScreen() {
   const nextStageId = sId + 1;
   const hasNext = nextStageId <= 100;
 
+  const TROPHY = String.fromCodePoint(0x1F3C6);
+  const ROCKET = String.fromCodePoint(0x1F680);
+  const SHARE_ICON = String.fromCodePoint(0x1F4E4);
+  const RETRY_ICON = String.fromCodePoint(0x1F504);
+  const HOME_ICON = String.fromCodePoint(0x1F3E0);
+  const STAR_EMOJI = String.fromCodePoint(0x2B50);
+
+  const starEmojis = Array(stars).fill(STAR_EMOJI).join('');
+
+  const handleShare = async () => {
+    const text = [
+      `${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
+      `Stage ${world.id}-${stageInWorld}\u300C${stage.name}\u300D`,
+      `${starEmojis} \u30AF\u30EA\u30A2\uFF01`,
+      `\u71C3\u6599${displayFuel}%\u6B8B\u3057\uFF01`,
+      `#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8`,
+    ].join('\n');
+    try {
+      if (Platform.OS === 'web') {
+        if (typeof navigator !== 'undefined' && navigator.share) {
+          await navigator.share({ text });
+        } else if (typeof navigator !== 'undefined' && navigator.clipboard) {
+          await navigator.clipboard.writeText(text);
+        }
+      } else {
+        await Share.share({ message: text });
+      }
+    } catch {
+      // User cancelled
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
+      {/* Fireworks for 3 stars */}
+      <Fireworks active={stars === 3} />
+
       <View style={styles.header}>
         <CoinDisplay amount={coins} />
       </View>
 
       <View style={styles.center}>
-        <Text style={styles.clearText}>✨ CLEAR! ✨</Text>
+        <Text style={styles.clearText}>
+          {stars === 3 ? '\u2728 PERFECT! \u2728' : '\u2728 CLEAR! \u2728'}
+        </Text>
         <Text style={styles.stageName}>
-          Stage {world.id}-{stageInWorld} 「{stage.name}」
+          {'Stage ' + world.id + '-' + stageInWorld + '\u300C' + stage.name + '\u300D'}
         </Text>
 
         <View style={styles.starsRow}>
@@ -86,34 +174,58 @@ export default function ResultScreen() {
           ))}
         </View>
 
+        {/* New Record badge */}
+        {isNewRecord && (
+          <Animated.View
+            style={[
+              styles.newRecordBadge,
+              {
+                opacity: recordFlash,
+                transform: [{ scale: recordScale }],
+              },
+            ]}
+          >
+            <Text style={styles.newRecordText}>{TROPHY + ' NEW RECORD!'}</Text>
+          </Animated.View>
+        )}
+
         <View style={styles.stats}>
-          <Text style={styles.statText}>残り燃料: {formatPercent(fuel)}</Text>
-          <Text style={styles.statText}>獲得コイン: +{coinReward}</Text>
+          <Text style={styles.statText}>{'\u6B8B\u308A\u71C3\u6599: ' + displayFuel + '%'}</Text>
+          <Text style={styles.statText}>{'\u7372\u5F97\u30B3\u30A4\u30F3: +' + coinReward}</Text>
         </View>
       </View>
 
       <View style={styles.buttons}>
+        {/* Share button */}
+        <Button
+          title={'\u30B7\u30A7\u30A2'}
+          onPress={handleShare}
+          variant="secondary"
+          icon={SHARE_ICON}
+          style={styles.shareBtn}
+        />
+
         {hasNext && (
           <Button
-            title="次のステージ"
+            title={'\u6B21\u306E\u30B9\u30C6\u30FC\u30B8'}
             onPress={() => router.replace(`/game/${nextStageId}`)}
             size="large"
-            icon="▶"
+            icon={'\u25B6'}
             style={styles.nextBtn}
           />
         )}
         <View style={styles.bottomBtns}>
           <Button
-            title="リトライ"
+            title={'\u30EA\u30C8\u30E9\u30A4'}
             onPress={() => router.replace(`/game/${sId}`)}
             variant="secondary"
-            icon="🔄"
+            icon={RETRY_ICON}
           />
           <Button
-            title="ステージ選択"
+            title={'\u30B9\u30C6\u30FC\u30B8\u9078\u629E'}
             onPress={() => router.replace(`/stages/${world.id}`)}
             variant="secondary"
-            icon="🏠"
+            icon={HOME_ICON}
           />
         </View>
       </View>
@@ -129,11 +241,27 @@ const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   clearText: { fontSize: 28, fontWeight: '900', color: COLORS.accent, marginBottom: 12 },
   stageName: { fontSize: 16, color: COLORS.text, fontWeight: '600', marginBottom: 24 },
-  starsRow: { flexDirection: 'row', gap: 16, marginBottom: 32 },
+  starsRow: { flexDirection: 'row', gap: 16, marginBottom: 16 },
   starText: { fontSize: 48 },
+  newRecordBadge: {
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    borderWidth: 1.5,
+    borderColor: '#FFD700',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    marginBottom: 16,
+  },
+  newRecordText: {
+    color: '#FFD700',
+    fontSize: 18,
+    fontWeight: '900',
+    letterSpacing: 2,
+  },
   stats: { gap: 8 },
   statText: { color: COLORS.textSecondary, fontSize: 16, textAlign: 'center' },
   buttons: { paddingHorizontal: 32, paddingBottom: 40, gap: 12 },
+  shareBtn: { width: '100%' },
   nextBtn: { width: '100%' },
   bottomBtns: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
 });
