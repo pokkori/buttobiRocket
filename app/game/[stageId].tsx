@@ -1,5 +1,5 @@
-import React, { useEffect, useCallback, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, Dimensions, Platform } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { GameCanvas } from '../../src/components/game/GameCanvas';
 import { FuelGauge } from '../../src/components/game/FuelGauge';
@@ -9,6 +9,18 @@ import { useProgressStore } from '../../src/stores/progressStore';
 import { getStageById } from '../../src/data/stages';
 import { getWorldForStage } from '../../src/data/worlds';
 import { COLORS } from '../../src/constants/colors';
+import {
+  playLaunchSound,
+  startFlyingSound,
+  stopFlyingSound,
+  playGravitySound,
+  playBlackHoleSound,
+  playWormholeSound,
+  playBoosterSound,
+  playGoalSound,
+  playCrashSound,
+  playAbsorbedSound,
+} from '../../src/utils/sound';
 
 const { width: SW } = Dimensions.get('window');
 
@@ -26,10 +38,14 @@ export default function GameScreen() {
   const reset = useGameStore(s => s.reset);
   const setPaused = useGameStore(s => s.setPaused);
   const isPaused = useGameStore(s => s.isPaused);
+  const lastCollisionEvent = useGameStore(s => s.lastCollisionEvent);
+  const proximity = useGameStore(s => s.proximity);
   const incrementLaunches = useProgressStore(s => s.incrementLaunches);
   const clearedStages = useProgressStore(s => s.clearedStages);
   const [launched, setLaunched] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const gravitySoundCooldown = useRef(0);
+  const blackHoleSoundCooldown = useRef(0);
 
   useEffect(() => {
     if (stage) {
@@ -46,27 +62,99 @@ export default function GameScreen() {
     if (phase === 'flying' && !launched) {
       incrementLaunches();
       setLaunched(true);
+      // Sound: launch + start flying loop
+      if (Platform.OS === 'web') {
+        playLaunchSound();
+        startFlyingSound();
+      }
     }
     if (phase === 'aiming') {
       setLaunched(false);
+      if (Platform.OS === 'web') {
+        stopFlyingSound();
+      }
     }
   }, [phase]);
 
   useEffect(() => {
     if (phase === 'goal' && stage) {
+      if (Platform.OS === 'web') {
+        stopFlyingSound();
+        playGoalSound();
+      }
       const stars = calculateStars(fuel, stage.starThresholds);
       const timeout = setTimeout(() => {
         router.replace(`/result/${sId}?stars=${stars}&fuel=${fuel}`);
       }, 800);
       return () => clearTimeout(timeout);
     }
-    if (phase === 'crashed' || phase === 'absorbed') {
+    if (phase === 'crashed') {
+      if (Platform.OS === 'web') {
+        stopFlyingSound();
+        playCrashSound();
+      }
+      const timeout = setTimeout(() => reset(), 1000);
+      return () => clearTimeout(timeout);
+    }
+    if (phase === 'absorbed') {
+      if (Platform.OS === 'web') {
+        stopFlyingSound();
+        playAbsorbedSound();
+      }
       const timeout = setTimeout(() => reset(), 1000);
       return () => clearTimeout(timeout);
     }
   }, [phase]);
 
+  // Sound: wormhole / booster collision events
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    if (lastCollisionEvent === 'wormhole') {
+      playWormholeSound();
+    } else if (lastCollisionEvent === 'booster') {
+      playBoosterSound();
+    }
+  }, [lastCollisionEvent]);
+
+  // Sound: proximity-based gravity and black hole sounds (throttled)
+  useEffect(() => {
+    if (Platform.OS !== 'web' || phase !== 'flying') return;
+    // Throttle: play at most once every 15 frames (~250ms)
+    if (proximity.closestPlanetDist < 0.2) {
+      if (gravitySoundCooldown.current <= 0) {
+        playGravitySound(proximity.closestPlanetDist);
+        gravitySoundCooldown.current = 15;
+      } else {
+        gravitySoundCooldown.current--;
+      }
+    } else {
+      gravitySoundCooldown.current = 0;
+    }
+    if (proximity.closestBlackHoleDist < 0.25) {
+      if (blackHoleSoundCooldown.current <= 0) {
+        playBlackHoleSound(proximity.closestBlackHoleDist);
+        blackHoleSoundCooldown.current = 20;
+      } else {
+        blackHoleSoundCooldown.current--;
+      }
+    } else {
+      blackHoleSoundCooldown.current = 0;
+    }
+  }, [proximity, phase]);
+
+  // Cleanup flying sound on unmount
+  useEffect(() => {
+    return () => {
+      if (Platform.OS === 'web') {
+        stopFlyingSound();
+      }
+    };
+  }, []);
+
   const handleRetry = useCallback(() => {
+    if (Platform.OS === 'web') {
+      stopFlyingSound();
+    }
     reset();
   }, [reset]);
 

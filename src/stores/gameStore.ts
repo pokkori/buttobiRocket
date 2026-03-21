@@ -5,13 +5,24 @@ import { updatePhysics } from '../engine/PhysicsEngine';
 import { checkCollisions } from '../engine/CollisionDetector';
 import { calculateSlingshot } from '../engine/SlingshotCalculator';
 import { predictTrajectory } from '../engine/TrajectoryCalculator';
-import { add, fromAngle, copy, magnitude } from '../utils/vector';
+import { add, fromAngle, copy, magnitude, distance } from '../utils/vector';
+
+export type CollisionEvent = 'none' | 'wormhole' | 'booster' | 'goal' | 'crashed' | 'absorbed';
+
+export interface ProximityData {
+  closestPlanetDist: number;
+  closestBlackHoleDist: number;
+}
 
 interface GameStore extends GameState {
   frameCount: number;
   usedBoosters: Set<string>;
   wormholeCooldown: number;
   failCount: number;
+  lastCollisionEvent: CollisionEvent;
+  proximity: ProximityData;
+  timeScale: number;
+  goalSlowMoTimer: number;
   setStage: (stage: StageData) => void;
   reset: () => void;
   startDrag: (pos: Vector2D) => void;
@@ -45,6 +56,8 @@ const defaultSlingshot: SlingshotState = {
   predictedTrajectory: [],
 };
 
+const defaultProximity: ProximityData = { closestPlanetDist: 999, closestBlackHoleDist: 999 };
+
 export const useGameStore = create<GameStore>((set, get) => ({
   phase: 'aiming',
   rocket: { ...defaultRocket },
@@ -56,6 +69,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   usedBoosters: new Set(),
   wormholeCooldown: 0,
   failCount: 0,
+  lastCollisionEvent: 'none',
+  proximity: { ...defaultProximity },
 
   setStage: (stage) => {
     set({
@@ -73,6 +88,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       usedBoosters: new Set(),
       wormholeCooldown: 0,
       failCount: 0,
+      lastCollisionEvent: 'none',
+      proximity: { ...defaultProximity },
     });
   },
 
@@ -93,6 +110,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       usedBoosters: new Set(),
       wormholeCooldown: 0,
       failCount: state.phase === 'crashed' || state.phase === 'absorbed' ? state.failCount + 1 : state.failCount,
+      lastCollisionEvent: 'none',
+      proximity: { ...defaultProximity },
     }));
   },
 
@@ -170,21 +189,26 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let newPhase: GamePhase = 'flying';
     const newUsedBoosters = new Set(state.usedBoosters);
     let wormholeCd = newCooldown;
+    let collisionEvent: CollisionEvent = 'none';
 
     switch (collision.type) {
       case 'goal':
         newPhase = 'goal';
+        collisionEvent = 'goal';
         break;
       case 'planet':
         newPhase = 'crashed';
+        collisionEvent = 'crashed';
         newRocket = { ...newRocket, isAlive: false };
         break;
       case 'blackhole':
         newPhase = 'absorbed';
+        collisionEvent = 'absorbed';
         newRocket = { ...newRocket, isAlive: false };
         break;
       case 'outOfBounds':
         newPhase = 'crashed';
+        collisionEvent = 'crashed';
         newRocket = { ...newRocket, isAlive: false };
         break;
       case 'wormhole': {
@@ -197,6 +221,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
           velocity: fromAngle(wh.exitAngle, speed),
         };
         wormholeCd = PHYSICS.WORMHOLE_COOLDOWN_FRAMES;
+        collisionEvent = 'wormhole';
         break;
       }
       case 'booster': {
@@ -207,7 +232,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
           velocity: add(newRocket.velocity, boostVec),
         };
         newUsedBoosters.add(b.id);
+        collisionEvent = 'booster';
         break;
+      }
+    }
+
+    // Compute proximity to planets and black holes
+    let closestPlanetDist = 999;
+    for (const planet of state.currentStage.planets) {
+      const d = distance(newRocket.position, npToV2(planet.position));
+      if (d < closestPlanetDist) closestPlanetDist = d;
+    }
+    let closestBlackHoleDist = 999;
+    for (const obj of state.currentStage.specialObjects) {
+      if (obj.type === 'blackhole') {
+        const d = distance(newRocket.position, npToV2(obj.data.position));
+        if (d < closestBlackHoleDist) closestBlackHoleDist = d;
       }
     }
 
@@ -218,6 +258,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       frameCount: newFrameCount,
       usedBoosters: newUsedBoosters,
       wormholeCooldown: wormholeCd,
+      lastCollisionEvent: collisionEvent,
+      proximity: { closestPlanetDist, closestBlackHoleDist },
     });
   },
 
