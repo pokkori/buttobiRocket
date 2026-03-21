@@ -9,6 +9,9 @@ export default function RankingScreen() {
   const router = useRouter();
   const entries = useProgressStore(s => s.rankingEntries ?? []);
   const coins = useProgressStore(s => s.coins);
+  const streak = useProgressStore(s => s.dailyChallenge.streak);
+  const clearedStages = useProgressStore(s => s.clearedStages);
+  const todayCount = Object.values(clearedStages).filter(r => r.clearCount > 0).length;
   const top10 = entries.slice(0, 10);
   return (
     <SafeAreaView style={styles.container}>
@@ -21,6 +24,12 @@ export default function RankingScreen() {
       </View>
       <Text style={styles.sub}>{'\u30CF\u30A4\u30B9\u30B3\u30A2 TOP10'}</Text>
       <ScrollView contentContainerStyle={styles.list}>
+        {/* 今日の成績サマリー */}
+        <View style={styles.todaySummary}>
+          <Text style={styles.todayTitle}>{'\u4ECA\u65E5\u306E\u6210\u7E3E'}</Text>
+          <Text style={styles.todayStat}>{`\u30AF\u30EA\u30A2\u6570: ${todayCount}\u30B9\u30C6\u30FC\u30B8`}</Text>
+          <Text style={styles.todayStat}>{`\u9023\u7D9A: ${streak}\u65E5\uD83D\uDD25`}</Text>
+        </View>
         {top10.map((entry, i) => (
           <View key={i} style={[styles.row, i === 0 && styles.rowGold, i === 1 && styles.rowSilver, i === 2 && styles.rowBronze]}>
             <Text style={styles.rank}>#{i + 1}</Text>
@@ -55,4 +64,7 @@ const styles = StyleSheet.create({
   stage: { color: COLORS.textSecondary, fontSize: 12 },
   date: { color: COLORS.textSecondary, fontSize: 11 },
   empty: { color: COLORS.textSecondary, textAlign: 'center', marginTop: 40, lineHeight: 28 },
+  todaySummary: { backgroundColor: 'rgba(0,191,255,0.1)', borderRadius: 12, padding: 12, marginHorizontal: 16, marginBottom: 8 },
+  todayTitle: { color: '#00BFFF', fontSize: 14, fontWeight: 'bold' },
+  todayStat: { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
 });

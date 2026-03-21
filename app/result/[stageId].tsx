@@ -144,8 +144,10 @@ export default function ResultScreen() {
   const starEmojis = Array(stars).fill(STAR_EMOJI).join('');
 
   const handleShare = async () => {
+    const fuelText = `\u6B8B\u308A\u71C3\u6599${Math.round(fuel * 100)}%`;
+    const rankText = perfectCount >= 10 ? `\u2B50\u5168\u30AF\u30EA\u30A2\u738B${perfectCount}\u30B9\u30C6\u30FC\u30B8` : `\u2605${perfectCount}\u30B9\u30C6\u30FC\u30B8\u30D1\u30FC\u30D5\u30A7\u30AF\u30C8`;
     const streakText = streak >= 3 ? ` ${streak}\u65E5\u9023\u7D9A\uD83D\uDD25` : '';
-    const text = `${ROCKET} \u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 Stage ${world.id}-${stageInWorld}${streakText} ${starEmojis}\u30AF\u30EA\u30A2\uFF01 #\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u30D1\u30BA\u30EB\u30B2\u30FC\u30E0`;
+    const text = `${ROCKET} \u3053\u306E\u8ECC\u9053\u3001\u8AB0\u304B\u306B\u822A\u6CD5\u3067\u304D\u308B\uFF1F Stage ${world.id}-${stageInWorld}${streakText} ${starEmojis}\n${fuelText} | ${rankText}\n#\u3076\u3063\u98DB\u3073\u30ED\u30B1\u30C3\u30C8 #\u30D1\u30BA\u30EB\u30B2\u30FC\u30E0 #\u91CD\u529B\u30D1\u30BA\u30EB`;
 
     try {
       if (Platform.OS === 'web') {

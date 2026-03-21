@@ -170,7 +170,7 @@ export async function generateShareCard(options: ShareCardOptions): Promise<Blob
   }
 
   // Streak badge
-  if (options.streak && options.streak >= 3) {
+  if (options.streak && options.streak >= 2) {
     const badgeX = 40;
     const badgeY = H - 115;
     const badgeW = 300;
