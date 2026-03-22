@@ -231,9 +231,12 @@ export default function GameScreen() {
         {/* Hint trail overlay */}
         {showHint && stage && (
           <View style={styles.hintOverlay} pointerEvents="none">
-            <Text style={styles.hintOverlayText}>
-              {'\u30D2\u30F3\u30C8: \u30B4\u30FC\u30EB\u65B9\u5411\u3078\u5F37\u3081\u306B\u6253\u3061\u4E0A\u3052\u3066\u307F\u3088\u3046\uFF01'}
-            </Text>
+            <View style={styles.hintCard}>
+              <Text style={styles.hintCardTitle}>{'💡 ヒント'}</Text>
+              <Text style={styles.hintOverlayText}>
+                {'\u30D2\u30F3\u30C8: \u30B4\u30FC\u30EB\u65B9\u5411\u3078\u5F37\u3081\u306B\u6253\u3061\u4E0A\u3052\u3066\u307F\u3088\u3046\uFF01'}
+              </Text>
+            </View>
           </View>
         )}
 
@@ -300,10 +303,23 @@ const styles = StyleSheet.create({
     position: 'absolute', top: '45%', left: 0, right: 0,
     alignItems: 'center',
   },
+  hintCard: {
+    backgroundColor: 'rgba(0,0,0,0.75)',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#FFD700',
+    alignItems: 'flex-start',
+    maxWidth: '80%',
+  },
+  hintCardTitle: {
+    color: '#FFD700',
+    fontWeight: 'bold',
+    fontSize: 13,
+    marginBottom: 4,
+  },
   hintOverlayText: {
-    backgroundColor: 'rgba(255,0,0,0.7)',
     color: '#FFFFFF', fontSize: 14, fontWeight: '700',
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12,
   },
   pauseOverlay: {
     ...StyleSheet.absoluteFillObject,

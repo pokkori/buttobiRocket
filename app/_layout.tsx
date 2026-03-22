@@ -24,9 +24,11 @@ export default function RootLayout() {
         <meta property="og:title" content="ぶっ飛びロケット" />
         <meta property="og:description" content="燃料を残してゴールを目指す宇宙物理パズル" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="/og-image.png" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="ぶっ飛びロケット 🚀" />
         <meta name="twitter:description" content="燃料を残してゴールを目指す宇宙物理パズル。星3クリアに挑戦！" />
+        <meta name="twitter:image" content="/og-image.png" />
       </Head>
       <StatusBar style="light" />
       <Stack

@@ -11,6 +11,21 @@ import { getWorldForStage } from '../../src/data/worlds';
 import { COLORS } from '../../src/constants/colors';
 import { generateShareCard } from '../../src/utils/shareCard';
 
+// AdMob: ネイティブ（iOS/Android）のみ使用。Web環境では動的import不可のため条件分岐。
+let RewardedAd: any = null;
+let RewardedAdEventType: any = null;
+let TestIds: any = null;
+if (Platform.OS !== 'web') {
+  try {
+    const admob = require('react-native-google-mobile-ads');
+    RewardedAd = admob.RewardedAd;
+    RewardedAdEventType = admob.RewardedAdEventType;
+    TestIds = admob.TestIds;
+  } catch (_) {
+    // AdMob SDK unavailable
+  }
+}
+
 export default function ResultScreen() {
   const router = useRouter();
   const { stageId, stars: starsParam, fuel: fuelParam, dailyMode } = useLocalSearchParams<{ stageId: string; stars: string; fuel: string; dailyMode?: string }>();
@@ -152,19 +167,47 @@ export default function ResultScreen() {
 
   const handleWatchAd = () => {
     setShowAdPrompt(false);
-    setTimeout(() => {
-      setAdWatched(true);
-      useProgressStore.getState().addCoins(coinReward);
-    }, 100);
+
+    // ネイティブ環境かつAdMob SDKが利用可能な場合はリワード広告を表示
+    if (Platform.OS !== 'web' && RewardedAd && RewardedAdEventType && TestIds) {
+      const adUnitId = __DEV__
+        ? TestIds.REWARDED
+        : 'ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx';
+      const rewarded = RewardedAd.createForAdRequest(adUnitId);
+
+      const unsubscribeEarned = rewarded.addAdEventListener(
+        RewardedAdEventType.EARNED_REWARD,
+        () => {
+          setAdWatched(true);
+          useProgressStore.getState().addCoins(coinReward);
+        },
+      );
+
+      rewarded.load();
+      rewarded.show().catch(() => {
+        // フォールバック: 広告が表示できない場合もコイン×2を付与
+        setAdWatched(true);
+        useProgressStore.getState().addCoins(coinReward);
+        unsubscribeEarned();
+      });
+    } else {
+      // Web環境 or AdMob未接続: モックで即付与
+      setTimeout(() => {
+        setAdWatched(true);
+        useProgressStore.getState().addCoins(coinReward);
+      }, 100);
+    }
   };
 
   const handleShare = async () => {
     const filledCells = Math.round(fuelRemaining / 10);
     const fuelGauge = '🟩'.repeat(filledCells) + '⬛'.repeat(10 - filledCells);
     const rankLabel = fuelRemaining >= 90 ? 'S' : fuelRemaining >= 70 ? 'A' : fuelRemaining >= 50 ? 'B' : fuelRemaining >= 30 ? 'C' : 'D';
+    const rankEmoji = fuelRemaining >= 90 ? '🥇' : fuelRemaining >= 70 ? '🥈' : fuelRemaining >= 50 ? '🥉' : '🎯';
+    const starsDisplay = stars === 3 ? '⭐⭐⭐' : stars === 2 ? '⭐⭐' : '⭐';
     const isDailyShare = stageId === "daily";
     const dailyLabel = isDailyShare ? "【デイリー】" : "";
-    const text = `${dailyLabel}🚀 ぶっ飛びロケット\n${fuelGauge}\n燃料${fuelRemaining}% ランク${rankLabel}\nあなたは何%残せる？\n#ぶっ飛びロケット #物理ゲーム`;
+    const text = `${dailyLabel}🚀 ぶっ飛びロケット ${rankEmoji}\n${starsDisplay} ${fuelGauge}\n燃料${fuelRemaining}% ランク${rankLabel}\nあなたは何%残せる？\nhttps://rocket-fling.vercel.app\n#ぶっ飛びロケット #物理ゲーム`;
 
     try {
       if (Platform.OS === 'web') {
