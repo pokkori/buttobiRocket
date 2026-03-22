@@ -14,6 +14,9 @@ export default function RankingScreen() {
   const today = new Date().toISOString().split("T")[0];
   const todayCount = entries.filter(e => e.date?.startsWith(today)).length;
   const top10 = entries.slice(0, 10);
+  const WORLD_BENCHMARK = { s: 3500, a: 3000, b: 2500 };
+  const bestScore = top10[0]?.score ?? 0;
+  const rankLabel = bestScore >= WORLD_BENCHMARK.s ? '世界上位10%相当' : bestScore >= WORLD_BENCHMARK.a ? '世界上位30%相当' : '世界上位50%相当';
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -31,6 +34,11 @@ export default function RankingScreen() {
           <Text style={styles.todayStat}>{`\u30AF\u30EA\u30A2\u6570: ${todayCount}\u30B9\u30C6\u30FC\u30B8`}</Text>
           <Text style={styles.todayStat}>{`\u9023\u7D9A: ${streak}\u65E5\uD83D\uDD25`}</Text>
         </View>
+        {top10.length > 0 && (
+          <View style={styles.worldRank}>
+            <Text style={styles.worldRankText}>{`🌍 ベストスコア: ${top10[0].score.toLocaleString()} (${rankLabel})`}</Text>
+          </View>
+        )}
         {top10.map((entry, i) => (
           <View key={i} style={[styles.row, i === 0 && styles.rowGold, i === 1 && styles.rowSilver, i === 2 && styles.rowBronze]}>
             <Text style={styles.rank}>#{i + 1}</Text>
@@ -68,4 +76,6 @@ const styles = StyleSheet.create({
   todaySummary: { backgroundColor: 'rgba(0,191,255,0.1)', borderRadius: 12, padding: 12, marginHorizontal: 16, marginBottom: 8 },
   todayTitle: { color: '#00BFFF', fontSize: 14, fontWeight: 'bold' },
   todayStat: { color: 'rgba(255,255,255,0.8)', fontSize: 13 },
+  worldRank: { backgroundColor: 'rgba(255,215,0,0.1)', borderRadius: 12, padding: 10, marginHorizontal: 16, marginBottom: 8, borderWidth: 1, borderColor: 'rgba(255,215,0,0.3)' },
+  worldRankText: { color: '#FFD700', fontSize: 13, textAlign: 'center', fontWeight: 'bold' },
 });

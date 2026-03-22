@@ -207,7 +207,12 @@ export default function ResultScreen() {
     const starsDisplay = stars === 3 ? '⭐⭐⭐' : stars === 2 ? '⭐⭐' : '⭐';
     const isDailyShare = stageId === "9999" || dailyMode === 'true';
     const dailyLabel = isDailyShare ? "【デイリー】" : "";
-    const text = `${dailyLabel}🚀 ぶっ飛びロケット ${rankEmoji}\n${starsDisplay} ${fuelGauge}\n燃料${fuelRemaining}% ランク${rankLabel}\nあなたは何%残せる？\nhttps://rocket-fling.vercel.app\n#ぶっ飛びロケット #物理ゲーム`;
+    const shareComment = fuelRemaining >= 90
+      ? `物理の天才か！？ 燃料${fuelRemaining}%で完全制覇🏆`
+      : fuelRemaining >= 70
+      ? `流石の実力！ 燃料${fuelRemaining}%クリア✨`
+      : `燃料${fuelRemaining}% ランク${rankLabel}`;
+    const text = `${dailyLabel}🚀 ぶっ飛びロケット ${rankEmoji}\n${starsDisplay} ${fuelGauge}\n${shareComment}\nあなたは何%残せる？\nhttps://rocket-fling.vercel.app\n#ぶっ飛びロケット #物理ゲーム`;
 
     try {
       if (Platform.OS === 'web') {
@@ -272,9 +277,9 @@ export default function ResultScreen() {
       </View>
 
       {/* Daily streak banner */}
-      {isDaily && streak >= 2 && (
+      {isDaily && streak >= 1 && (
         <View style={styles.streakBanner}>
-          <Text style={styles.streakText}>{`\uD83D\uDD25 ${streak}\u65E5\u9023\u7D9A\u30AF\u30EA\u30A2\uFF01`}</Text>
+          <Text style={styles.streakText}>{streak === 1 ? '🔥 デイリー初クリア！明日も続けよう' : `🔥 ${streak}日連続クリア！`}</Text>
         </View>
       )}
 

@@ -35,7 +35,7 @@ interface GameStore extends GameState {
   goalSlowMoTimer: number;
   finalTrail: Vector2D[];
   goalParticles: GoalParticle[];
-  setStage: (stage: StageData) => void;
+  setStage: (stage: StageData, skinId?: string) => void;
   reset: () => void;
   startDrag: (pos: Vector2D) => void;
   updateDrag: (pos: Vector2D) => void;
@@ -118,7 +118,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   finalTrail: [],
   goalParticles: [],
 
-  setStage: (stage) => {
+  setStage: (stage, skinId) => {
     set({
       currentStage: stage,
       phase: 'aiming',
@@ -127,6 +127,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         position: npToV2(stage.rocketStart),
         rotation: stage.rocketAngle,
         fuel: stage.initialFuel,
+        skinId: skinId ?? 'default',
       },
       slingshotState: { ...defaultSlingshot },
       elapsedMs: 0,
@@ -153,6 +154,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         position: npToV2(stage.rocketStart),
         rotation: stage.rocketAngle,
         fuel: stage.initialFuel,
+        skinId: state.rocket.skinId ?? 'default',
       },
       slingshotState: { ...defaultSlingshot },
       elapsedMs: 0,

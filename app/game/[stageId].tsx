@@ -54,7 +54,7 @@ export default function GameScreen() {
 
   useEffect(() => {
     if (stage) {
-      setStage(stage);
+      setStage(stage, useProgressStore.getState().equippedSkinId);
       // Show tutorial on first play of each stage (or always for stage 1)
       const isFirstPlay = !clearedStages[sId];
       if (isFirstPlay && (sId === 1 || stage.hint)) {
