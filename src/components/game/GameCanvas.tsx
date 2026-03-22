@@ -73,9 +73,72 @@ function drawRocket(
   const cy = position.y * h;
   const rot = rotation + Math.PI / 2; // adjust so 0 = pointing up
 
-  const bodyColor = skinId === 'gold' ? '#FFD700' : skinId === 'cosmic' ? '#A855F7' : '#E8E8E8';
-  const strokeColor = skinId === 'gold' ? '#FFA500' : skinId === 'cosmic' ? '#7C3AED' : '#CCCCCC';
-  const noseColor = skinId === 'gold' ? '#FF8C00' : skinId === 'cosmic' ? '#00FFFF' : '#FF4444';
+  let bodyColor = '#E8E8E8';
+  let noseColor = '#FF4444';
+  let strokeColor = '#CCCCCC';
+  let trailColor = '#ff8800';
+
+  switch (skinId) {
+    case 'gold':
+      bodyColor = '#FFD700';
+      noseColor = '#FF8C00';
+      strokeColor = '#FFA500';
+      trailColor = '#FFD700';
+      break;
+    case 'cosmic':
+      bodyColor = '#A855F7';
+      noseColor = '#00FFFF';
+      strokeColor = '#7C3AED';
+      trailColor = '#9400D3';
+      break;
+    case 'fire':
+      bodyColor = '#FF4500';
+      noseColor = '#FF8C00';
+      strokeColor = '#8B0000';
+      trailColor = '#FF6347';
+      break;
+    case 'ice':
+      bodyColor = '#00BFFF';
+      noseColor = '#87CEEB';
+      strokeColor = '#4682B4';
+      trailColor = '#00CED1';
+      break;
+    case 'thunder':
+      bodyColor = '#FFD700';
+      noseColor = '#FFF44F';
+      strokeColor = '#8B6914';
+      trailColor = '#FFFF00';
+      break;
+    case 'rainbow':
+      bodyColor = '#FF69B4';
+      noseColor = '#FF1493';
+      strokeColor = '#C71585';
+      trailColor = '#FF69B4';
+      break;
+    case 'ghost':
+      bodyColor = 'rgba(255,255,255,0.85)';
+      noseColor = '#9370DB';
+      strokeColor = '#D3D3D3';
+      trailColor = 'rgba(200,200,255,0.7)';
+      break;
+    case 'neon_pink':
+      bodyColor = '#FF1493';
+      noseColor = '#FF69B4';
+      strokeColor = '#C71585';
+      trailColor = '#FF1493';
+      break;
+    case 'emerald':
+      bodyColor = '#50C878';
+      noseColor = '#00A36C';
+      strokeColor = '#2E8B57';
+      trailColor = '#50C878';
+      break;
+    default:
+      bodyColor = '#E8E8E8';
+      noseColor = '#FF4444';
+      strokeColor = '#CCCCCC';
+      trailColor = '#ff8800';
+  }
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -132,7 +195,7 @@ function drawRocket(
       ctx.lineTo(px - size / 2, py + size);
       ctx.lineTo(px + size / 2, py + size);
       ctx.closePath();
-      ctx.fillStyle = i % 2 === 0 ? '#FFA500' : '#FF4444';
+      ctx.fillStyle = i % 2 === 0 ? trailColor : noseColor;
       ctx.globalAlpha = 0.7 + rng * 0.3;
       ctx.fill();
     }
