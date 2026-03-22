@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
+import Head from 'expo-router/head';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
@@ -17,6 +18,16 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={styles.root}>
+      <Head>
+        <title>ぶっ飛びロケット - 燃料を残して宇宙を制覇する物理パズル</title>
+        <meta name="description" content="重力・ブラックホール・ワームホールを使ってロケットをゴールに導く無料物理パズルゲーム。デイリーチャレンジで毎日遊べる！" />
+        <meta property="og:title" content="ぶっ飛びロケット" />
+        <meta property="og:description" content="燃料を残してゴールを目指す宇宙物理パズル" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="ぶっ飛びロケット 🚀" />
+        <meta name="twitter:description" content="燃料を残してゴールを目指す宇宙物理パズル。星3クリアに挑戦！" />
+      </Head>
       <StatusBar style="light" />
       <Stack
         screenOptions={{

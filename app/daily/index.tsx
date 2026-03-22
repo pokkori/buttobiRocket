@@ -128,19 +128,31 @@ export default function DailyScreen() {
           <Text style={styles.bonusTitle}>連続ボーナス</Text>
           <View style={styles.bonusGrid}>
             {[
-              { days: 3, coins: 20 },
-              { days: 7, coins: 50 },
-              { days: 14, coins: 100 },
-              { days: 30, coins: 0, skin: 'スキン🚀' },
-            ].map(b => (
-              <View key={b.days} style={[styles.bonusItem, { opacity: actualStreak >= b.days ? 1 : 0.5 }]}>
-                <Text style={styles.bonusDays}>{b.days}日</Text>
-                <Text style={styles.bonusReward}>
-                  {b.coins ? `+${b.coins}💰` : b.skin}
-                </Text>
-                {actualStreak >= b.days && <Text style={styles.bonusCheck}>✅</Text>}
-              </View>
-            ))}
+              { days: 3, coins: 20, label: '3日' },
+              { days: 7, coins: 50, label: '1週間' },
+              { days: 14, coins: 100, label: '2週間' },
+              { days: 30, coins: 0, skin: 'コズミック🚀', label: '1ヶ月' },
+            ].map(b => {
+              const achieved = actualStreak >= b.days;
+              const isNext = !achieved && actualStreak >= b.days - 7;
+              return (
+                <View key={b.days} style={[
+                  styles.bonusItem,
+                  achieved && styles.bonusItemAchieved,
+                  isNext && styles.bonusItemNext,
+                  !achieved && !isNext && { opacity: 0.4 },
+                ]}>
+                  <Text style={[styles.bonusDays, achieved && { color: '#FFD700' }]}>{b.label}</Text>
+                  <Text style={styles.bonusReward}>
+                    {b.coins ? `+${b.coins}💰` : b.skin}
+                  </Text>
+                  {achieved
+                    ? <Text style={{ fontSize: 16 }}>✅</Text>
+                    : <Text style={{ fontSize: 10, color: '#888' }}>{`残${b.days - actualStreak}日`}</Text>
+                  }
+                </View>
+              );
+            })}
           </View>
         </View>
       </View>
@@ -173,6 +185,16 @@ const styles = StyleSheet.create({
   bonusGrid: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   bonusItem: {
     flex: 1, backgroundColor: COLORS.cardBg, borderRadius: 10, padding: 10, alignItems: 'center', gap: 4,
+  },
+  bonusItemAchieved: {
+    borderWidth: 1.5,
+    borderColor: '#FFD700',
+    backgroundColor: 'rgba(255,215,0,0.1)',
+  },
+  bonusItemNext: {
+    borderWidth: 1.5,
+    borderColor: '#00BFFF',
+    backgroundColor: 'rgba(0,191,255,0.08)',
   },
   bonusDays: { fontSize: 13, fontWeight: '700', color: COLORS.text },
   bonusReward: { fontSize: 11, color: COLORS.accent },

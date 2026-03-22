@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, SafeAreaView, Animated, Easing, Share, Platform, Image } from 'react-native';
+import { View, Text, StyleSheet, SafeAreaView, Animated, Easing, Share, Platform, Image, TouchableOpacity } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { Button } from '../../src/components/ui/Button';
 import { CoinDisplay } from '../../src/components/ui/CoinDisplay';
@@ -37,6 +37,10 @@ export default function ResultScreen() {
 
   // Trajectory preview state
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Ad reward state
+  const [adWatched, setAdWatched] = useState(false);
+  const [showAdPrompt, setShowAdPrompt] = useState(true);
 
   // Star animations
   const starAnims = [
@@ -133,6 +137,7 @@ export default function ResultScreen() {
 
   const stageInWorld = stage.id - world.stageIds[0] + 1;
   const coinReward = stars === 3 ? 30 : stars === 2 ? 20 : 10;
+  const effectiveCoinReward = adWatched ? coinReward * 2 : coinReward;
   const nextStageId = sId + 1;
   const hasNext = nextStageId <= 100;
 
@@ -145,13 +150,21 @@ export default function ResultScreen() {
 
   const starEmojis = Array(stars).fill(STAR_EMOJI).join('');
 
+  const handleWatchAd = () => {
+    setShowAdPrompt(false);
+    setTimeout(() => {
+      setAdWatched(true);
+      useProgressStore.getState().addCoins(coinReward);
+    }, 100);
+  };
+
   const handleShare = async () => {
-    const fuelText = fuelRemaining >= 80
-      ? `燃料${fuelRemaining}%残し💎爆速クリア`
-      : `燃料${fuelRemaining}%で激突クリア🚀`;
-    const isDaily = stageId === "daily";
-    const dailyLabel = isDaily ? "【デイリー】" : "";
-    const text = `${dailyLabel}🚀 ぶっ飛びロケット\n${fuelText}\nステージ: ${stageId} ⭐クリア！\nあなたは燃料どれだけ残せる？\n#ぶっ飛びロケット #物理ゲーム #ロケット #スマホゲーム`;
+    const filledCells = Math.round(fuelRemaining / 10);
+    const fuelGauge = '🟩'.repeat(filledCells) + '⬛'.repeat(10 - filledCells);
+    const rankLabel = fuelRemaining >= 90 ? 'S' : fuelRemaining >= 70 ? 'A' : fuelRemaining >= 50 ? 'B' : fuelRemaining >= 30 ? 'C' : 'D';
+    const isDailyShare = stageId === "daily";
+    const dailyLabel = isDailyShare ? "【デイリー】" : "";
+    const text = `${dailyLabel}🚀 ぶっ飛びロケット\n${fuelGauge}\n燃料${fuelRemaining}% ランク${rankLabel}\nあなたは何%残せる？\n#ぶっ飛びロケット #物理ゲーム`;
 
     try {
       if (Platform.OS === 'web') {
@@ -266,9 +279,25 @@ export default function ResultScreen() {
           </Animated.View>
         )}
 
+        {showAdPrompt && !adWatched && (
+          <TouchableOpacity
+            style={styles.adDoubleBtn}
+            onPress={handleWatchAd}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.adDoubleBtnText}>📺 動画を見てコイン×2！</Text>
+            <Text style={styles.adDoubleBtnSub}>+{coinReward}コイン 追加ゲット</Text>
+          </TouchableOpacity>
+        )}
+        {adWatched && (
+          <View style={styles.adWatchedBadge}>
+            <Text style={styles.adWatchedText}>✅ コイン×2 ゲット！ +{coinReward}💰</Text>
+          </View>
+        )}
+
         <View style={styles.stats}>
           <Text style={styles.statText}>{'\u6B8B\u308A\u71C3\u6599: ' + displayFuel + '%'}</Text>
-          <Text style={styles.statText}>{'\u7372\u5F97\u30B3\u30A4\u30F3: +' + coinReward}</Text>
+          <Text style={styles.statText}>{'\u7372\u5F97\u30B3\u30A4\u30F3: +' + effectiveCoinReward}</Text>
           <Text style={styles.statText}>{'\u30AF\u30EA\u30A2\u6E08: ' + totalCleared + '\u30B9\u30C6\u30FC\u30B8 / \u2B50\uFF13: ' + perfectCount + '\u30B9\u30C6\u30FC\u30B8'}</Text>
         </View>
 
@@ -292,9 +321,9 @@ export default function ResultScreen() {
       <View style={styles.buttons}>
         {/* Share button */}
         <Button
-          title={'\u30B7\u30A7\u30A2'}
+          title={'📤 シェアして友達に自慢！'}
           onPress={handleShare}
-          variant="secondary"
+          variant="primary"
           icon={SHARE_ICON}
           style={styles.shareBtn}
         />
@@ -383,6 +412,39 @@ const styles = StyleSheet.create({
   },
   stats: { gap: 8 },
   statText: { color: COLORS.textSecondary, fontSize: 16, textAlign: 'center' },
+  adDoubleBtn: {
+    backgroundColor: 'rgba(255,215,0,0.15)',
+    borderWidth: 2,
+    borderColor: '#FFD700',
+    borderRadius: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 16,
+    width: '90%',
+  },
+  adDoubleBtnText: {
+    color: '#FFD700',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  adDoubleBtnSub: {
+    color: 'rgba(255,215,0,0.7)',
+    fontSize: 13,
+    marginTop: 4,
+  },
+  adWatchedBadge: {
+    backgroundColor: 'rgba(0,255,136,0.15)',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    marginBottom: 16,
+  },
+  adWatchedText: {
+    color: '#00FF88',
+    fontSize: 16,
+    fontWeight: '800',
+  },
   buttons: { paddingHorizontal: 32, paddingBottom: 40, gap: 12 },
   shareBtn: { width: '100%' },
   nextBtn: { width: '100%' },
