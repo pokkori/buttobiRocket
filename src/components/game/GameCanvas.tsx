@@ -67,10 +67,15 @@ function drawRocket(
   rotation: number,
   isLaunched: boolean,
   frameCount: number,
+  skinId?: string,
 ) {
   const cx = position.x * w;
   const cy = position.y * h;
   const rot = rotation + Math.PI / 2; // adjust so 0 = pointing up
+
+  const bodyColor = skinId === 'gold' ? '#FFD700' : skinId === 'cosmic' ? '#A855F7' : '#E8E8E8';
+  const strokeColor = skinId === 'gold' ? '#FFA500' : skinId === 'cosmic' ? '#7C3AED' : '#CCCCCC';
+  const noseColor = skinId === 'gold' ? '#FF8C00' : skinId === 'cosmic' ? '#00FFFF' : '#FF4444';
 
   ctx.save();
   ctx.translate(cx, cy);
@@ -86,9 +91,9 @@ function drawRocket(
   ctx.lineTo(-8, 10);
   ctx.lineTo(8, 10);
   ctx.closePath();
-  ctx.fillStyle = '#E8E8E8';
+  ctx.fillStyle = bodyColor;
   ctx.fill();
-  ctx.strokeStyle = '#CCCCCC';
+  ctx.strokeStyle = strokeColor;
   ctx.lineWidth = 1;
   ctx.stroke();
 
@@ -98,7 +103,7 @@ function drawRocket(
   ctx.lineTo(-5, -4);
   ctx.lineTo(5, -4);
   ctx.closePath();
-  ctx.fillStyle = '#FF4444';
+  ctx.fillStyle = noseColor;
   ctx.fill();
 
   // Window
@@ -698,7 +703,7 @@ export function GameCanvas() {
 
     // 8. Rocket
     if (rocket.isAlive) {
-      drawRocket(ctx, w, h, rocket.position, rocket.rotation, rocket.isLaunched, fc);
+      drawRocket(ctx, w, h, rocket.position, rocket.rotation, rocket.isLaunched, fc, rocket.skinId);
     }
 
     // 9. Goal particles

@@ -41,6 +41,7 @@ export default function GameScreen() {
   const setPaused = useGameStore(s => s.setPaused);
   const isPaused = useGameStore(s => s.isPaused);
   const lastCollisionEvent = useGameStore(s => s.lastCollisionEvent);
+  const failCount = useGameStore(s => s.failCount);
   const proximity = useGameStore(s => s.proximity);
   const incrementLaunches = useProgressStore(s => s.incrementLaunches);
   const clearedStages = useProgressStore(s => s.clearedStages);
@@ -212,6 +213,9 @@ export default function GameScreen() {
             {world.id}-{stageInWorld} {stage.name}
           </Text>
           <FuelGauge fuel={fuel} />
+          <Text style={styles.rankBadge}>
+            {Math.round(fuel * 100) >= 90 ? '🥇S' : Math.round(fuel * 100) >= 70 ? '🥈A' : Math.round(fuel * 100) >= 50 ? '🥉B' : Math.round(fuel * 100) >= 30 ? 'C' : 'D'}
+          </Text>
         </View>
 
         {/* Retry button */}
@@ -247,6 +251,13 @@ export default function GameScreen() {
             hint={stage.hint}
             onDismiss={() => setShowTutorial(false)}
           />
+        )}
+
+        {/* Auto hint banner after 3 failures */}
+        {failCount >= 3 && phase === 'aiming' && stage?.hint && (
+          <View style={styles.autoHintBanner}>
+            <Text style={styles.autoHintText}>💡 {stage.hint}</Text>
+          </View>
         )}
 
         {/* Back button (shown when paused) */}
@@ -286,6 +297,13 @@ const styles = StyleSheet.create({
   },
   pauseText: { color: COLORS.text, fontSize: 16 },
   stageLabel: { color: COLORS.text, fontSize: 14, fontWeight: '600' },
+  rankBadge: {
+    color: '#FFD700',
+    fontSize: 14,
+    fontWeight: '900',
+    minWidth: 28,
+    textAlign: 'center',
+  },
   retryBtn: {
     position: 'absolute', bottom: 40, right: 20,
     backgroundColor: 'rgba(0,0,0,0.6)',
@@ -320,6 +338,16 @@ const styles = StyleSheet.create({
   },
   hintOverlayText: {
     color: '#FFFFFF', fontSize: 14, fontWeight: '700',
+  },
+  autoHintBanner: {
+    position: 'absolute', top: 60, left: 16, right: 16,
+    backgroundColor: 'rgba(0,100,255,0.85)',
+    borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: '#4488FF',
+    alignItems: 'center',
+  },
+  autoHintText: {
+    color: '#FFFFFF', fontSize: 14, fontWeight: '700', textAlign: 'center',
   },
   pauseOverlay: {
     ...StyleSheet.absoluteFillObject,

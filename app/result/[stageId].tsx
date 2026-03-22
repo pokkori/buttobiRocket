@@ -205,7 +205,7 @@ export default function ResultScreen() {
     const rankLabel = fuelRemaining >= 90 ? 'S' : fuelRemaining >= 70 ? 'A' : fuelRemaining >= 50 ? 'B' : fuelRemaining >= 30 ? 'C' : 'D';
     const rankEmoji = fuelRemaining >= 90 ? '🥇' : fuelRemaining >= 70 ? '🥈' : fuelRemaining >= 50 ? '🥉' : '🎯';
     const starsDisplay = stars === 3 ? '⭐⭐⭐' : stars === 2 ? '⭐⭐' : '⭐';
-    const isDailyShare = stageId === "daily";
+    const isDailyShare = stageId === "9999" || dailyMode === 'true';
     const dailyLabel = isDailyShare ? "【デイリー】" : "";
     const text = `${dailyLabel}🚀 ぶっ飛びロケット ${rankEmoji}\n${starsDisplay} ${fuelGauge}\n燃料${fuelRemaining}% ランク${rankLabel}\nあなたは何%残せる？\nhttps://rocket-fling.vercel.app\n#ぶっ飛びロケット #物理ゲーム`;
 
