@@ -172,7 +172,8 @@ export default function ResultScreen() {
     if (Platform.OS !== 'web' && RewardedAd && RewardedAdEventType && TestIds) {
       const adUnitId = __DEV__
         ? TestIds.REWARDED
-        : 'ca-app-pub-xxxxxxxxxxxxxxxx/xxxxxxxxxx';
+        // ⚠️ Google公式テストID使用中。AdMob本番審査通過後に実IDへ置換すること
+        : 'ca-app-pub-3940256099942544/5224354917';
       const rewarded = RewardedAd.createForAdRequest(adUnitId);
 
       const unsubscribeEarned = rewarded.addAdEventListener(

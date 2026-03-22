@@ -210,9 +210,25 @@ function drawTrail(
   w: number,
   h: number,
   trail: Vector2D[],
+  skinId?: string,
 ) {
   const len = trail.length;
   if (len < 2) return;
+
+  // Determine trail color based on skinId
+  let trailRgb = '0,191,255'; // default: blue
+  switch (skinId) {
+    case 'gold':      trailRgb = '255,215,0';   break;
+    case 'cosmic':    trailRgb = '147,0,211';   break;
+    case 'fire':      trailRgb = '255,99,71';   break;
+    case 'ice':       trailRgb = '0,206,209';   break;
+    case 'thunder':   trailRgb = '255,255,0';   break;
+    case 'rainbow':   trailRgb = '255,105,180'; break;
+    case 'ghost':     trailRgb = '200,200,200'; break;
+    case 'neon_pink': trailRgb = '255,20,147';  break;
+    case 'emerald':   trailRgb = '0,201,87';    break;
+    default:          trailRgb = '0,191,255';   break;
+  }
 
   // Draw trail with bezier curves, lineWidth fading from thick to thin
   for (let i = 1; i < len; i++) {
@@ -221,7 +237,7 @@ function drawTrail(
     const lineWidth = 1 + progress * 4;
 
     ctx.beginPath();
-    ctx.strokeStyle = `rgba(0,191,255,${alpha})`;
+    ctx.strokeStyle = `rgba(${trailRgb},${alpha})`;
     ctx.lineWidth = lineWidth;
     ctx.lineCap = 'round';
 
@@ -252,8 +268,8 @@ function drawTrail(
     const hx = head.x * w;
     const hy = head.y * h;
     const grad = ctx.createRadialGradient(hx, hy, 0, hx, hy, 8);
-    grad.addColorStop(0, 'rgba(0,191,255,0.9)');
-    grad.addColorStop(1, 'rgba(0,191,255,0)');
+    grad.addColorStop(0, `rgba(${trailRgb},0.9)`);
+    grad.addColorStop(1, `rgba(${trailRgb},0)`);
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.arc(hx, hy, 8, 0, Math.PI * 2);
@@ -751,7 +767,7 @@ export function GameCanvas() {
 
     // 5. Trail
     if (rocket.trail.length > 1) {
-      drawTrail(ctx, w, h, rocket.trail);
+      drawTrail(ctx, w, h, rocket.trail, rocket.skinId);
     }
 
     // 6. Prediction dots (aiming)
